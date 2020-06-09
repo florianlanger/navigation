@@ -1,0 +1,36 @@
+{
+    "experiment_name": "exp_1_hard_pairs",
+    "gpu": "6",
+    "training": 
+        {
+            "n_epochs": 1000,
+            "batch_size": 40,
+            "learning_rate": 0.001,
+            "pairs_per_epoch": 10000,
+            "log_interval": 10,
+            "save_interval": 10
+        },
+
+    "graph":
+        {
+            "place": "living_room",
+            "no_fly": "True"
+        },
+    "sampler":
+        {
+            "ratio_hard_pairs": 0.5,
+            "ratio_terminate_pairs": 0.1
+        },
+    "visualisations":
+        {
+            "interval": 1,
+            "random_pairs": 5,
+            "hard_pairs": 10
+        },
+    "model":
+        {
+            "class": "Graph_Replacer"
+        }
+    }
+        
+        

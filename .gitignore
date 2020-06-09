@@ -1,1 +1,5 @@
 experiments/
+tests/
+graphs/
+
+__pycache__/

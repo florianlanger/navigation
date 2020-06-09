@@ -1,0 +1,36 @@
+{
+    "experiment_name": "debug",
+    "gpu": "5",
+    "training": 
+        {
+            "n_epochs": 1,
+            "batch_size": 1,
+            "learning_rate": 0.0001,
+            "pairs_per_epoch": 1,
+            "log_interval": 50,
+            "save_interval": 100
+        },
+    "data":
+        {
+            "place": "living_room",
+            "occlusion_probability": 0.0,
+            "min_occlusion": 0.4,
+            "max_occlusion": 1.0
+        },
+    "sampler":
+        {
+            "no_fly": "True"
+        },
+    "visualisations":
+        {
+            "interval": 50,
+            "random_pairs": 1
+        },
+    "model":
+        {
+            "class": "Pose_model",
+            "number_outputs":10
+        }
+    }
+        
+        

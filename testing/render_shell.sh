@@ -1,0 +1,2 @@
+#!/bin/sh
+/home/mlmi-2019/fml35/Downloads/blender-2.82a-linux64/blender --debug ~/Documents/mphil_project/models/ignas_living_room/living_room_ignas.blend -b --python /home/mlmi-2019/fml35/Documents/mphil_project/experiments_all/navigation/testing/render_pose.py -- $1 $2 $3 $4 $5 $6 > /dev/null 2>&1 

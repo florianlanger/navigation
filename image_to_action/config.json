@@ -1,0 +1,48 @@
+{
+    "experiment_name": "debug",
+    "gpu": "4",
+    "training": 
+        {
+            "n_epochs": 1,
+            "batch_size": 40,
+            "learning_rate": 0.0001,
+            "pairs_per_epoch": 1000,
+            "log_interval": 5,
+            "save_interval": 50
+        },
+    "loss":
+        {
+            "type":"kl_div",
+            "terminate_penalty": 10.0
+        },
+    "data":
+        {
+            "orientation": "True",
+            "place": "living_room",
+            "occlusion_probability": 0.0,
+            "min_occlusion": 0.4,
+            "max_occlusion": 1.0,
+            "use_decoder": "False"
+        },
+    "sampler":
+        {
+            "ratio_hard_pairs": 0.5,
+            "ratio_terminate_pairs": 0.1
+        },
+    "visualisations":
+        {
+            "interval": 10,
+            "random_pairs": 10,
+            "hard_pairs": 20
+        },
+    "model":
+        {
+            "class": "Resnet",
+            "number_outputs":10
+        },
+    "graph":
+        {
+            "type": "only_forward",
+            "no_fly": "True"
+        }
+    }
