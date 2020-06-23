@@ -1,5 +1,5 @@
 {
-    "experiment_name": "exp_6_small_angles_hard_pairs",
+    "experiment_name": "exp_7_discrete_angles",
     "gpu": "6",
     "training": 
         {
@@ -18,12 +18,12 @@
         },
     "sampler":
         {
-            "ratio_hard_pairs": 0.5,
+            "ratio_hard_pairs": 0.0,
             "ratio_terminate_pairs": 0.1
         },
     "visualisations":
         {
-            "interval": 1,
+            "interval": 10,
             "random_pairs": 5,
             "hard_pairs": 10
         },

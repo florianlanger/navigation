@@ -26,8 +26,8 @@ def load_data_set_and_sampler(config,exp_path):
         if config["graph"]["no_fly"] == "False":
             dataset = Decoder_Dataset(None,config)
         elif config["graph"]["no_fly"] == "True": 
-            dataset = Decoder_Dataset(exp_path + '/../../graphs/no_fly_living_room_small_angles.gpickle',config)
-            sampler = Sampler(exp_path + '/../../graphs/no_fly_living_room_small_angles.gpickle',config)
+            dataset = Decoder_Dataset(exp_path + '/../../../graph_network/graphs/no_fly_living_room.gpickle',config)
+            sampler = Sampler(exp_path + '/../../../graph_network/graphs/no_fly_living_room.gpickle',config)
     return dataset,sampler
 
 

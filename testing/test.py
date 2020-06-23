@@ -12,6 +12,8 @@ import cv2
 import sys
 import json
 import subprocess
+import socket
+import pickle
 
 sys.path.append(os.path.abspath("/home/mlmi-2019/fml35/Documents/mphil_project/experiments_all/navigation/testing"))
 from models import Combi_Model
@@ -54,7 +56,7 @@ def find_next_move(predicted_pose,predicted_target_pose,action_predictor,true_po
             break
     return move,action_predictions[0]
 
-def perform_test(pose_model,action_predictor,target_adjuster,config,converter,test_folder,dir_path):
+def perform_test(pose_model,action_predictor,target_adjuster,config,converter,test_folder,dir_path,s):
     
     history_dict = {}
     history_dict['statistics'] = {}
@@ -79,7 +81,10 @@ def perform_test(pose_model,action_predictor,target_adjuster,config,converter,te
     history_dict['true_target'] = target_pose
     history_dict['target_name'] = target_name
 
-    subprocess.call([dir_path + '/render_shell.sh',str(x),str(y),str(z),str(angle),test_folder + '/images',target_name])
+    #subprocess.call([dir_path + '/render_shell.sh',str(x),str(y),str(z),str(angle),test_folder + '/images',target_name])
+    s.sendall(pickle.dumps({'pose': target_pose,'path':test_folder + '/images','render_name':target_name}))
+    status = s.recv(1024)
+
     predicted_target_pose = pose_model(load_image(test_folder,target_name))[0]
     predicted_target_pose[3] = predicted_target_pose[3] % 1.
     history_dict['predicted_targets'][history_dict["target_counter"]] = predicted_target_pose.cpu().numpy().round(4) 
@@ -87,9 +92,16 @@ def perform_test(pose_model,action_predictor,target_adjuster,config,converter,te
     # Repeat until network says terminate or until have reached max_moves
     while history_dict['counter'] < config["max_moves"]:
         # Find next move
-        x,y,z,angle = true_pose.numpy().round(4)[0],true_pose.numpy().round(4)[1],true_pose.numpy().round(4)[2],true_pose.numpy().round(4)[3]
+        #x,y,z,angle = true_pose.numpy().round(4)[0],true_pose.numpy().round(4)[1],true_pose.numpy().round(4)[2],true_pose.numpy().round(4)[3]
         current_name = 'render_{}_x_{:.4f}_y_{:.4f}_z_{:.4f}_rz_{:.4f}.png'.format(str(history_dict['counter']+1).zfill(2),x,y,z,angle)
-        subprocess.call([dir_path + '/render_shell.sh',str(x),str(y),str(z),str(angle),test_folder + '/images',current_name])
+
+        s.sendall(pickle.dumps({'pose': true_pose.numpy().round(4),'path':test_folder + '/images','render_name':current_name}))
+        while True:
+            data = s.recv(1024)
+            if data == b'done':
+                break
+
+        #subprocess.call([dir_path + '/render_shell.sh',str(x),str(y),str(z),str(angle),test_folder + '/images',current_name])
         history_dict['image_names'].append(current_name)
 
         predicted_pose = pose_model(load_image(test_folder,current_name))[0]
@@ -105,7 +117,7 @@ def perform_test(pose_model,action_predictor,target_adjuster,config,converter,te
             plot_action_predictions(history_dict,test_folder,config)
             visualise_poses(history_dict,test_folder)
 
-            predicted_target_pose = adjust_target(target_adjuster,predicted_pose,predicted_target_pose)
+            predicted_target_pose = adjust_target(target_adjuster,predicted_target_pose)
             history_dict['target_counter'] += 1
             history_dict['predicted_targets'][history_dict['target_counter']] = predicted_target_pose.cpu().numpy().round(4)
             plot_trajectory(history_dict, test_folder,converter,'start')
@@ -116,8 +128,9 @@ def perform_test(pose_model,action_predictor,target_adjuster,config,converter,te
         history_dict['action_predictions'][history_dict['counter']] = action_predictions.cpu().numpy().round(4)
 
         if move == 9:
-            history_dict['terminated'] = True
-            break
+            print('Terminate')
+            #history_dict['terminated'] = True
+            #break
 
         history_dict['counter'] +=1
 
@@ -133,7 +146,7 @@ def perform_test(pose_model,action_predictor,target_adjuster,config,converter,te
 
     return history_dict
 
-def adjust_target(target_adjuster,predicted_pose,predicted_target_pose):
+def adjust_target(target_adjuster,predicted_target_pose):
 
     while True:
         try:
@@ -149,9 +162,9 @@ def adjust_target(target_adjuster,predicted_pose,predicted_target_pose):
     else:
         one_hot_instruction = torch.zeros((9,)).cuda()
         one_hot_instruction[instruction] = 1.
-        target_diff_vector = target_adjuster(torch.cat((predicted_pose,one_hot_instruction)).unsqueeze(0))[0]
+        target_diff_vector = target_adjuster(torch.cat((predicted_target_pose,one_hot_instruction)).unsqueeze(0))[0]
 
-        return predicted_pose + target_diff_vector
+        return predicted_target_pose + target_diff_vector
     
 
 def instruction_to_index(text_instruction):
@@ -199,33 +212,39 @@ def load_model(dir_path,config):
 
 def main():
     print('Begin testing...')
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    config = json.load(open(dir_path + '/config.json', 'r'))
-    os.environ["CUDA_VISIBLE_DEVICES"] = config["gpu"]
+    HOST = '127.0.0.1'  # The server's hostname or IP address
+    PORT = 65433       # The port used by the server
 
-    converter = load_converter()
-    
-    #load model
-    pose_model,action_predictor,target_adjuster = load_model(dir_path,config)
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((HOST, PORT)) 
+        print('Connected to server')   
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        config = json.load(open(dir_path + '/config.json', 'r'))
+        os.environ["CUDA_VISIBLE_DEVICES"] = config["gpu"]
 
-    with torch.no_grad():
-        for j in range(config["number_tests"]):
+        converter = load_converter()
+        
+        #load model
+        pose_model,action_predictor,target_adjuster = load_model(dir_path,config)
 
-            dt_string = datetime.now().strftime("time_%H_%M_%S_date_%d_%m_%Y")
-            test_folder =  "{}/tests/{}_{}".format(dir_path,config["name"],dt_string)
-            os.mkdir(test_folder)
-            os.mkdir(test_folder + '/images')
+        with torch.no_grad():
+            for j in range(config["number_tests"]):
 
-            history_dict = perform_test(pose_model,action_predictor,target_adjuster,config,converter,test_folder,dir_path)
-            plot_trajectory(history_dict, test_folder,converter,'final')
-            plot_action_predictions(history_dict,test_folder,config)
-            visualise_poses(history_dict,test_folder)
+                dt_string = datetime.now().strftime("time_%H_%M_%S_date_%d_%m_%Y")
+                test_folder =  "{}/tests/{}_{}".format(dir_path,config["name"],dt_string)
+                os.mkdir(test_folder)
+                os.mkdir(test_folder + '/images')
 
-            dict_file = test_folder + '/history_dict'
-            f = open(dict_file + '.txt','a')
-            f.write(str(history_dict))
-            f.close()
-            np.save(dict_file+'.npy', history_dict)
+                history_dict = perform_test(pose_model,action_predictor,target_adjuster,config,converter,test_folder,dir_path,s)
+                plot_trajectory(history_dict, test_folder,converter,'final')
+                plot_action_predictions(history_dict,test_folder,config)
+                visualise_poses(history_dict,test_folder)
+
+                dict_file = test_folder + '/history_dict'
+                f = open(dict_file + '.txt','a')
+                f.write(str(history_dict))
+                f.close()
+                np.save(dict_file+'.npy', history_dict)
 
 if __name__ == "__main__":
     main()

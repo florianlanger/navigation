@@ -11,10 +11,13 @@ def one_view_trajectory(ax,history_dict,folder_path,converter):
 
 
     for i in range(history_dict["target_counter"]+1):
+        color = 'blue'
+        if i == history_dict["target_counter"]:
+            color = 'orange'
         x_t,y_t,z_t = history_dict['predicted_targets'][i,0],history_dict['predicted_targets'][i,1],history_dict['predicted_targets'][i,2]
-        ax.scatter(x_t,y_t,z_t,label='Target {}'.format(i+1))
+        ax.scatter(x_t,y_t,z_t,color=color)
         dx_t, dy_t = dx_t, dy_t = - np.sin(2 * np.pi * history_dict['predicted_targets'][i,3]), np.cos(2 * np.pi * history_dict['predicted_targets'][i,3])
-        ax.quiver(x_t,y_t,z_t, dx_t, dy_t, 0, length=0.1, color="orange",arrow_length_ratio=0.6)
+        ax.quiver(x_t,y_t,z_t, dx_t, dy_t, 0, length=0.1, color=color,arrow_length_ratio=0.6)
 
 
     for name,color in zip(['true_poses','predicted_poses'],['green','red']):

@@ -28,7 +28,7 @@ class Decoder_Dataset(data.Dataset):
             return poses, indices, target_distribution
 
       def perturb_pose(self,pose):
-            perturbation = torch.cat((0.1*torch.rand((3,)) - 0.05, 0.0625*torch.rand((1,)) - 0.03125)).cuda()
+            perturbation = torch.cat((0.1*torch.rand((3,)) - 0.05,torch.zeros((1,)))).cuda()
             perturbed_pose = pose + perturbation
             return perturbed_pose
 
