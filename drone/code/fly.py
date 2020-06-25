@@ -1,10 +1,3 @@
-# simple example demonstrating how to control a Tello using your keyboard.
-# For a more fully featured example see manual-control-pygame.py
-# 
-# Use W, A, S, D for moving, E, Q for rotating and R, F for going up and down.
-# When starting the script the Tello will takeoff, pressing ESC makes it land
-#  and the script exit.
-
 import torch
 import torch.nn as nn
 import torchvision
@@ -21,11 +14,14 @@ import json
 import subprocess
 from djitellopy import Tello
 import cv2, math, time
+import shutil
+#from pythonzenity import Entry
 
 sys.path.append(os.path.abspath("/Users/legend98/Google Drive/Cambridge Academic/MPhil project/navigation/drone"))
 sys.path.append(os.path.abspath("/Users/legend98/Google Drive/Cambridge Academic/MPhil project/navigation"))
 
 from action_predictor.code.models.decoder import Decoder_Basic
+from visualisations import plot_trajectory, plot_action_predictions
 from pose.code.models.model import Pose_Model
 
 
@@ -36,11 +32,11 @@ def load_models(dir_path):
     pretrained_model = resnet18()
     pretrained_model.fc = nn.Sequential()
     pose_model = Pose_Model(pretrained_model,512)
-    pose_model.load_state_dict(torch.load(dir_path + '/networks/pose.pth',map_location=torch.device('cpu')))
+    pose_model.load_state_dict(torch.load(dir_path + '/../networks/pose.pth',map_location=torch.device('cpu')))
     pose_model.eval()
 
     action_predictor = Decoder_Basic(10)
-    action_predictor.load_state_dict(torch.load(dir_path + '/networks/exp_6_small_angles_hard_pairs_time_15_02_48_date_02_06_2020_last_epoch_model.pth',map_location=torch.device('cpu')))
+    action_predictor.load_state_dict(torch.load(dir_path + '/../networks/exp_6_small_angles_hard_pairs_time_15_02_48_date_02_06_2020_last_epoch_model.pth',map_location=torch.device('cpu')))
     action_predictor.eval()
 
     return pose_model,action_predictor
@@ -49,6 +45,9 @@ def load_models(dir_path):
 def make_directories(exp_path):
     os.mkdir(exp_path)
     os.mkdir(exp_path + '/images')
+    os.mkdir(exp_path + '/trajectories')
+    os.mkdir(exp_path + '/action_predictions')
+    shutil.copytree(exp_path +'/../../code',exp_path +'/code')
 
 def find_pose(pose_model,image_name,exp_path):
     image = Image.open(exp_path +'/images/' + image_name)
@@ -58,13 +57,6 @@ def find_pose(pose_model,image_name,exp_path):
     pose = pose_model(image)[0]
     print(pose)
     return pose
-
-def find_next_action(action_predictor,predicted_pose,target_pose):
-    concat_poses = torch.cat((predicted_pose,target_pose),dim=0).unsqueeze(0)
-    action_predictions = action_predictor(concat_poses)[0]
-    print('Action predictions',action_predictions)
-    _,action_index = torch.max(action_predictions,dim=0)
-    return action_index
 
 def instruction_to_index(text_instruction):
     dict_instruction_to_index = {}
@@ -115,15 +107,12 @@ def action_index_to_text(action_index):
 
 def check_user_input(tello,mode):
     key = cv2.waitKey(1) & 0xff
-    print('key',key)
     if key == 27: # ESC
         tello.land()
         cv2.destroyAllWindows()
         return False,'end_mode'
     else:
-        print('ord(w)',ord('w'))
         if key == ord('w'):
-            print('press w')
             tello.move_forward(30)
         elif key == ord('s'):
             tello.move_back(30)
@@ -146,28 +135,24 @@ def check_user_input(tello,mode):
         return True,mode
 
 def during_flight(tello,pose_model,action_predictor,exp_path):
-    frame_read = tello.get_frame_read()
     counter = 0
-    target_pose = torch.zeros((4,))
-    target_pose[2] += 1.
-    
+
     keep_going = True
-    mode = 'manual'
+    mode = 'automatic'
     while keep_going == True:
         while mode == 'automatic':
+            if counter == 0:
+                history_dict = initialise_history_dict()
+                #entry = Entry(text="Where should I fly to?", entry_text="Fly over the table")
+                #print(entry)
+                # find target from text here
+                target_pose = torch.zeros((4,))
+                target_pose[2] += 1.
+                history_dict['predicted_targets'].append(target_pose.numpy())
+
             if(counter%1000 ==0):
-                img = frame_read.frame
-                image_name = 'image_{}.png'.format(str(counter).zfill(6))
-                cv2.imwrite(exp_path + '/images/' + image_name,img)
-                predicted_pose = find_pose(pose_model,image_name,exp_path)
-                predicted_pose[3] = predicted_pose[3] % 1.
-                action_index = find_next_action(action_predictor,predicted_pose,target_pose)
-                execute_action(tello,action_index)
-                cv2.putText(img, 'Predicted Pose: {}'.format(list(predicted_pose.numpy().round(3))), (5, 720 - 5),cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-                cv2.putText(img, 'Predicted Target: {}'.format(list(target_pose.numpy())), (5, 720 - 40),cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-                cv2.putText(img, 'Predicted Action: {}'.format(action_index_to_text(action_index)), (5, 720 - 75),cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-                cv2.imshow("drone", img)
-            
+                automatic_flight(tello,pose_model,action_predictor,history_dict,target_pose,exp_path,counter)
+                history_dict['counter'] +=1            
 
             keep_going,mode = check_user_input(tello,mode)
 
@@ -175,16 +160,67 @@ def during_flight(tello,pose_model,action_predictor,exp_path):
         
         while mode == 'manual':
             print('in mode manual')
-            img = frame_read.frame
+            img = tello.get_frame_read().frame
             keep_going,mode = check_user_input(tello,mode)
             cv2.imshow("drone", img)
+    
+    dict_file = exp_path + '/history_dict'
+    f = open(dict_file + '.txt','a')
+    f.write(str(history_dict))
+    f.close()
+    np.save(dict_file+'.npy', history_dict)
 
+
+def automatic_flight(tello,pose_model,action_predictor,history_dict,target_pose,exp_path,counter):
+    
+    #read current frame and save image
+    img = tello.get_frame_read().frame
+    image_name = 'image_{}.png'.format(str(counter).zfill(6))
+    history_dict['image_names'].append(image_name)
+    cv2.imwrite(exp_path + '/images/' + image_name,img)
+
+    # Find predicted pose
+    predicted_pose = find_pose(pose_model,image_name,exp_path)
+    predicted_pose[3] = predicted_pose[3] % 1.
+    history_dict['predicted_poses'].append(predicted_pose.numpy().round(4))
+
+    #Calculate action predictions
+    action_predictions = action_predictor(torch.cat((predicted_pose,target_pose),dim=0).unsqueeze(0))[0]
+    _,action_index = torch.max(action_predictions,dim=0)
+    history_dict['action_predictions'].append(action_predictions.numpy().round(4))
+
+    # Execute actions
+    execute_action(tello,action_index)
+
+    #Display live image
+    cv2.putText(img, 'Predicted Pose: {}'.format(list(predicted_pose.numpy().round(3))), (5, 720 - 5),cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+    cv2.putText(img, 'Predicted Target: {}'.format(list(target_pose.numpy())), (5, 720 - 40),cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+    cv2.putText(img, 'Predicted Action: {}'.format(action_index_to_text(action_index)), (5, 720 - 75),cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+    cv2.imshow("drone", img)
+
+    # Create visualisations
+    plot_trajectory(history_dict, exp_path + '/trajectories')
+    plot_action_predictions(history_dict,exp_path + '/action_predictions')
+
+
+
+def initialise_history_dict():
+    history_dict = {}
+    history_dict['statistics'] = {}
+    history_dict['predicted_poses'] = []
+    history_dict['predicted_targets'] = []
+    history_dict['action_predictions'] = []
+    history_dict['image_names'] = []
+    history_dict['counter'] = 0
+    history_dict['target_counter'] = 0
+    history_dict['terminated'] = False
+    return history_dict
 
 def main():
 
     # Bookkeeping 
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    exp_path = '{}/experiments/{}'.format(dir_path, datetime.now().strftime("time_%H_%M_%S_date_%d_%m_%Y"))
+    exp_path = '{}/../experiments/{}'.format(dir_path, datetime.now().strftime("time_%H_%M_%S_date_%d_%m_%Y"))
     make_directories(exp_path)
 
     #Load models
