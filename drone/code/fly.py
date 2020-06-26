@@ -138,7 +138,7 @@ def during_flight(tello,pose_model,action_predictor,exp_path):
     counter = 0
 
     keep_going = True
-    mode = 'automatic'
+    mode = 'manual'
     while keep_going == True:
         while mode == 'automatic':
             if counter == 0:
