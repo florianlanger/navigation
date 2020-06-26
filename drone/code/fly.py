@@ -1,3 +1,10 @@
+#Press ESC for drone to land.
+# Change mode between manual (m) where you control the drone with keyboard
+# and (n) automatic where drone flies by itself. 
+# In Manual mode Forward (w), Backward (s), Left (a), Right(d), Up (r), Down (f), Rotate ACW(q), Rotate CW (e)  
+
+
+
 import torch
 import torch.nn as nn
 import torchvision

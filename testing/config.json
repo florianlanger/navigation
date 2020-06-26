@@ -4,7 +4,7 @@
     "pose_model":"exp_4_augmentation_time_19_16_49_date_01_06_2020/checkpoints/epoch_2201_model.pth",
     "target_adjuster_model":"exp_4_diff_vector_time_08_50_18_date_08_06_2020",
     "use_guidance":"True",
-    "frequency_guidance": 6,
+    "frequency_guidance": 10,
     "gpu": "6",
     "max_moves": 100,
     "number_tests": 1,

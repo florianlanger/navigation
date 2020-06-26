@@ -15,16 +15,17 @@ import subprocess
 import socket
 import pickle
 
-sys.path.append(os.path.abspath("/home/mlmi-2019/fml35/Documents/mphil_project/experiments_all/navigation/testing"))
+sys.path.append(os.path.abspath("/scratches/robot_2/fml35/mphil_project/navigation/testing"))
 from models import Combi_Model
 #from render_pose import render_pose
 from visualisations import plot_trajectory,plot_action_predictions,visualise_poses
 
-sys.path.append(os.path.abspath("/home/mlmi-2019/fml35/Documents/mphil_project/experiments_all/navigation/"))
+sys.path.append(os.path.abspath("/scratches/robot_2/fml35/mphil_project/navigation"))
 from graph_network.code.graphs.conversions import Converter
 from action_predictor.code.models.decoder import Decoder_Basic
 from pose.code.models.model import Pose_Model
 from target_adjuster.code.models.model import Target_Adjuster
+from target_pose.target_pose import find_point,filter_text
 
 
 
@@ -71,8 +72,11 @@ def perform_test(pose_model,action_predictor,target_adjuster,config,converter,te
     history_dict['target_indices'] = np.zeros((config["max_moves"]))
     history_dict['terminated'] = False
 
+    constraints = []
+
     true_pose = sample_position(converter)
-    target_pose = sample_position(converter)
+    #target_pose = sample_position(converter)
+    target_pose = torch.tensor([1.1,0.3,0.5,0.5]).cuda()
 
     #target_name = render_pose(target_pose.cpu().numpy(),test_folder + '/images',-1)
     target_pose = target_pose.cpu().numpy().round(4)
@@ -117,7 +121,7 @@ def perform_test(pose_model,action_predictor,target_adjuster,config,converter,te
             plot_action_predictions(history_dict,test_folder,config)
             visualise_poses(history_dict,test_folder)
 
-            predicted_target_pose = adjust_target(target_adjuster,predicted_target_pose)
+            predicted_target_pose,constraints = describe_target(constraints,predicted_pose,predicted_target_pose)
             history_dict['target_counter'] += 1
             history_dict['predicted_targets'][history_dict['target_counter']] = predicted_target_pose.cpu().numpy().round(4)
             plot_trajectory(history_dict, test_folder,converter,'start')
@@ -165,7 +169,30 @@ def adjust_target(target_adjuster,predicted_target_pose):
         target_diff_vector = target_adjuster(torch.cat((predicted_target_pose,one_hot_instruction)).unsqueeze(0))[0]
 
         return predicted_target_pose + target_diff_vector
-    
+
+def describe_target(constraints,current_pose,predicted_target_pose):
+
+    objects = {'armchair':np.array([-0.7,1.1,0.46,0.6,0.8,0.46]),
+                'sofa': np.array([1.1,0.3,0.5,0.55,0.8,0.4])}
+
+    space_dim = ((-1.6,2.2),(-0.8,1.7),(0.2,1.7))
+    while True:
+        try:
+            text_instruction = input('Describe the pose: ')
+            object_name,preposition = filter_text(text_instruction)
+        except NameError:
+            print("Please enter a valid description. Must contain sofa or armchair and left, right, front, behind, above or below.")
+            continue
+        else:
+            break
+    if object_name == 'no constraint':
+        return predicted_target_pose,constraints
+    else:
+        constraints.append({'object_name':object_name,'preposition':preposition})
+        current_pose_copy = current_pose.cpu().numpy()[:3]
+        point = find_point(objects,current_pose_copy,constraints,space_dim)
+        point.append(current_pose[3].item())
+        return torch.tensor(point).cuda(),constraints
 
 def instruction_to_index(text_instruction):
     dict_instruction_to_index = {}
@@ -183,8 +210,10 @@ def instruction_to_index(text_instruction):
 
 
 def load_converter():
-    min_pos = torch.tensor([-1.3,-0.5,0.2,0.]).cuda()
-    max_pos = torch.tensor([1.8,1.4,1.7,0.9375]).cuda()
+    # min_pos = torch.tensor([-1.3,-0.5,0.2,0.]).cuda()
+    # max_pos = torch.tensor([1.8,1.4,1.7,0.9375]).cuda()
+    min_pos = torch.tensor([-1.6,-0.8,0.2,0.]).cuda()
+    max_pos = torch.tensor([2.2,1.7,1.7,0.9375]).cuda()
     steps = torch.tensor([0.1,0.1,0.1,0.0625]).cuda()
     number_poses = 163840
     corners_no_fly_zone = torch.tensor([[[0.5,-0.5,0.1],[1.7,1.1,0.9]],[[-1.3,0.5,0.1],[-0.1,1.7,1.1]]]).cuda()
