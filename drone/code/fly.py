@@ -25,11 +25,10 @@ import shutil
 #from pythonzenity import Entry
 
 sys.path.append(os.path.abspath("/Users/legend98/Google Drive/Cambridge Academic/MPhil project/navigation/drone"))
-sys.path.append(os.path.abspath("/Users/legend98/Google Drive/Cambridge Academic/MPhil project/navigation"))
 
-from action_predictor.code.models.decoder import Decoder_Basic
+from models.action_predictor import Decoder_Basic
 from visualisations import plot_trajectory, plot_action_predictions
-from pose.code.models.model import Pose_Model
+from models.pose import Pose_Model
 
 
 
