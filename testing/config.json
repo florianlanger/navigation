@@ -1,5 +1,5 @@
 {
-    "name": "test_02",
+    "name": "test_03",
     "action_predictor_model":"exp_6_small_angles_hard_pairs_time_15_02_48_date_02_06_2020",
     "pose_model":"exp_4_augmentation_time_19_16_49_date_01_06_2020/checkpoints/epoch_2201_model.pth",
     "target_adjuster_model":"exp_4_diff_vector_time_08_50_18_date_08_06_2020",
