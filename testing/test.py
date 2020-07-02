@@ -75,8 +75,8 @@ def perform_test(pose_model,action_predictor,target_adjuster,config,converter,te
     constraints = []
 
     true_pose = sample_position(converter)
-    #target_pose = sample_position(converter)
-    target_pose = torch.tensor([1.1,0.3,0.5,0.5]).cuda()
+    target_pose = sample_position(converter)
+    #target_pose = torch.tensor([1.1,0.3,0.5,0.5]).cuda()
 
     #target_name = render_pose(target_pose.cpu().numpy(),test_folder + '/images',-1)
     target_pose = target_pose.cpu().numpy().round(4)
