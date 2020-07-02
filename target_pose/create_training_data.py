@@ -24,8 +24,7 @@ def plot(objects,current_pose,target_pose,dim_of_space,path,counter):
     fig.savefig(file_path)
     plt.close(fig)
     image = cv2.imread(file_path) 
-    cv2.imshow('Image', image)  
-    cv2.waitkey(0)  
+    cv2.imshow('Image', image)   
 
 
 def plot_position_and_target(ax,objects,current_pose,target_pose,dim_of_space):
