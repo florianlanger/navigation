@@ -23,9 +23,9 @@ result = speech_recognizer.recognize_once()
 
 def add_cube():
     size = 1.
-    x = 2. + np.random.rand()*4
-    y = - x +  np.random.rand()* 2 * x
-    z = np.random.rand()*x
+    x = 4. + np.random.rand()*2
+    y = - 1 +  np.random.rand()* 2
+    z = 2 + np.random.rand()
     cube = np.array([x,y,z,size,size,size])
     return cube
 
@@ -34,11 +34,9 @@ def add_cube():
 #point 5 x 5 x 5 is center of the cube
 # one corner is 4 x 4 x 4 
 def generate_pose(cube):
-    while True:
-        indices = np.random.randint(9,size=(3))
-        position = indices_to_position(cube,indices)
-        if np.abs(position[1]) < position[0] and position[2] < position[0] and position[2] > 0:
-            return position
+    indices = np.random.randint(9,size=(3))
+    position = indices_to_position(cube,indices)
+    return position
 
 def indices_to_position(cube,indices):
     position = cube[:3] + (indices - 4) * cube[3:6]/2
@@ -88,7 +86,7 @@ def main():
         print('Connected to server')
 
         #while True:
-        for i in range(100):
+        for i in range(133):
 
             with open(path + '/counter.txt', "r") as file:
                 counter = file.readline()
