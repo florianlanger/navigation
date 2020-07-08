@@ -45,15 +45,13 @@ def main():
 
 
 
-    transcribed = open(path + '/data_transcribed.csv', 'w')
+    transcribed = open(path + '/data_transcribed_new.csv', 'a')
     with open('{}/data.csv'.format(path), 'r' ) as file:
         for i,line in enumerate(file):
-            if i > 1:
+            if i > 105:
                 transcribed_text = transcribe_azure(speech_config,i,path).replace(',', '').replace('.', '')
                 line = line.strip() + transcribed_text + ',' + transcribed_text + '\n'
-            else:
-                pass
-            transcribed.write(line)
+                transcribed.write(line)
     transcribed.close()
 
 main()
