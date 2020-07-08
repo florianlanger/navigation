@@ -1,0 +1,23 @@
+{
+    "experiment_name": "exp_1",
+    "gpu": "6",
+    "training": 
+        {
+            "n_epochs": 5000,
+            "learning_rate": 0.001,
+            "save_interval": 20
+        },
+    "loss":
+        {
+            "type": "direct"
+        },
+    "visualisations":
+        {
+            "interval": 10,
+            "number": 5
+        },
+    "model":
+        {
+            "hidden_dim": 64
+        }
+    }

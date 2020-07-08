@@ -1,0 +1,25 @@
+{
+    "experiment_name": "debug",
+    "gpu": "6",
+    "training": 
+        {
+            "n_epochs": 100,
+            "learning_rate": 0.01,
+            "save_interval": 20,
+            "batch_size": 5
+        },
+    "loss":
+        {
+            "type": "direct"
+        },
+    "visualisations":
+        {
+            "interval": 10,
+            "number": 0
+        },
+    "model":
+        {
+            "hidden_dim": 32,
+            "embedding_dim": 5
+        }
+    }
