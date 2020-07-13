@@ -1,5 +1,6 @@
 experiments/
 tests/
-graphs/
+graph_network/graphs/
+image_to_action/graphs/
 networks/
 __pycache__/
