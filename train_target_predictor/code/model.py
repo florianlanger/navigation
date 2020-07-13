@@ -15,9 +15,9 @@ class LSTM_model(nn.Module):
 
         # The LSTM takes word embeddings as inputs, and outputs hidden states
         # with dimensionality hidden_dim.
-        self.lstm = nn.LSTM(embedding_dim, hidden_dim)
+        self.lstm = nn.LSTM(embedding_dim, hidden_dim)#num_layers = 2,dropout = 0.3)
 
-        self.fc1 = nn.Linear(hidden_dim, 9*9*9)
+        self.fc1 = nn.Linear(hidden_dim, 2*9*9*9)
         # self.fc2 = nn.Linear(128, 128)
         # self.fc3 = nn.Linear(128, 9*9*9)
 
@@ -35,7 +35,7 @@ class LSTM_model(nn.Module):
         #x = self.fc1(torch.cat((lstm_out[-1].view(-1),cube_dimensions)))
         x = self.fc1(ht)
 
-        x = torch.sigmoid(x)
+        #x = torch.sigmoid(x)
         return x
 
     # def calc_embeddings(self,sentences):

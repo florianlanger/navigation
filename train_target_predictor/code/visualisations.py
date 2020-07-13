@@ -25,11 +25,12 @@ def one_view_probabilities(ax,output,target,cube,text=None):
 
 
     # visualise target
-    index = np.argmax(target)
-    index_1, index_2, index_3 = index // 81,  (index % 81)  // 9, index % 9
-    indices = np.array([index_1, index_2, index_3])
-    position = cube[:3] + (indices - 4) * cube[3:6]/2 + np.array([0.05,0.05,0.05])
-    ax.scatter(position[0],position[1],position[2],color='red')    
+    for i in range(len(target)):
+        if target[i] == 1:
+            index_1, index_2, index_3 = i // 81,  (i % 81)  // 9, i % 9
+            indices = np.array([index_1, index_2, index_3])
+            position = cube[:3] + (indices - 4) * cube[3:6]/2 + np.array([0.05,0.05,0.05])
+            ax.scatter(position[0],position[1],position[2],color='red')    
 
     # visualise camera
     ax.scatter(0,0,1.5,color='black')
@@ -133,3 +134,4 @@ def plot_combined(metrics,kinds,df,min_epoch,path):
 
     fig.tight_layout()
     fig.savefig('{}/combined_{}_{}.png'.format(path,metrics[0],metrics[1]),dpi=70)
+    plt.close(fig)

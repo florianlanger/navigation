@@ -14,6 +14,7 @@ def convert_pose_to_one_hot(cube_dimensions,target_poses):
 
     neighbouring_indices = torch.tensor([[0,0,0],[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]]).cuda()
     for i in range(cube_dimensions.shape[0]):
+        # put 1 if just want single target, 7 if want all neighbouring
         for j in range(7):
             new_indices = indices[i] + neighbouring_indices[j]
             new_indices = torch.clamp(new_indices,0,8)

@@ -1,9 +1,9 @@
 {
-    "experiment_name": "debug",
+    "experiment_name": "multiple_correct_400_epochs",
     "gpu": "6",
     "training": 
         {
-            "n_epochs": 100,
+            "n_epochs": 400,
             "learning_rate": 0.01,
             "save_interval": 20,
             "batch_size": 5
@@ -15,7 +15,7 @@
     "visualisations":
         {
             "interval": 10,
-            "number": 0
+            "number": 5
         },
     "model":
         {

@@ -15,6 +15,11 @@ import subprocess
 import socket
 import pickle
 
+import sounddevice as sd
+from scipy.io.wavfile import write
+import wavio
+import azure.cognitiveservices.speech as speechsdk
+
 sys.path.append(os.path.abspath("/scratches/robot_2/fml35/mphil_project/navigation/testing"))
 from models import Combi_Model
 #from render_pose import render_pose
@@ -26,6 +31,8 @@ from action_predictor.code.models.decoder import Decoder_Basic
 from pose.code.models.model import Pose_Model
 from target_adjuster.code.models.model import Target_Adjuster
 from target_pose.target_pose import find_point,filter_text
+from train_target_predictor.code.data import Target_Predictor_Dataset
+from train_target_predictor.code.model import LSTM_model
 
 
 
@@ -57,7 +64,7 @@ def find_next_move(predicted_pose,predicted_target_pose,action_predictor,true_po
             break
     return move,action_predictions[0]
 
-def perform_test(pose_model,action_predictor,target_adjuster,config,converter,test_folder,dir_path,s):
+def perform_test(pose_model,action_predictor,lstm_model,text_dataset,config,converter,test_folder,dir_path,s):
     
     history_dict = {}
     history_dict['statistics'] = {}
@@ -121,7 +128,10 @@ def perform_test(pose_model,action_predictor,target_adjuster,config,converter,te
             plot_action_predictions(history_dict,test_folder,config)
             visualise_poses(history_dict,test_folder)
 
-            predicted_target_pose,constraints = describe_target(constraints,predicted_pose,predicted_target_pose)
+            #predicted_target_pose,constraints = describe_target(constraints,predicted_pose,predicted_target_pose)
+            new_target_from_speech(test_folder,history_dict['target_counter'],lstm_model,text_dataset)
+            
+            
             history_dict['target_counter'] += 1
             history_dict['predicted_targets'][history_dict['target_counter']] = predicted_target_pose.cpu().numpy().round(4)
             plot_trajectory(history_dict, test_folder,converter,'start')
@@ -149,6 +159,77 @@ def perform_test(pose_model,action_predictor,target_adjuster,config,converter,te
 
 
     return history_dict
+
+def voice_command(path):
+    input('Press anything to start recording')
+    print('Start recording ...')
+    duration = 5  # seconds
+    fs = 44100
+    myrecording = sd.rec(int(duration * fs), samplerate=fs, channels=1)
+    sd.wait()
+    print('Finished recording')
+    audio_path = path+'/recordings/recording_{}.npy'.format(str(counter).zfill(4))
+    np.save(audio_path,myrecording)
+    return audio_path
+
+def new_target_from_speech(test_folder,counter,lstm_model,text_dataset):
+    audio_file = voice_command(test_folder)
+    text = transcribe_audio(audio_file)
+    print(text)
+    text,anchor_object = preprocess_text(text)
+    length_description = len(text.split())
+    vectorized_description = vectorize_text(text,text_dataset)
+
+    output = lstm_model(None,vectorized_description.unsqueeze(0),length_description.unsqueeze(0))
+    softmax = nn.Softmax(dim=2)
+    output = softmax(output.reshape((-1,9*9*9,2)))
+    _,index = torch.max(output[:,:,0])
+    print(index)
+
+def preprocess_text(text):
+    text = text.lower()
+    anchor_object = None
+    if 'sofa' in text:
+        anchor_object = 'sofa'
+        text.replace('sofa','cube')
+    elif 'armchair' in text:
+        anchor_object = 'armchair'
+        text.replace('armchair','cube')
+    else:
+        print('No anchor object detected')
+    return text,anchor_object
+
+    
+def vectorize_text(text,text_dataset):
+    vectorized_description = torch.zeros((1,40),dtype=torch.long).cuda()
+    for j,word in enumerate(text.split()):
+        vectorized_descriptions[0,j] = text_dataset.vocab.index(word)
+    return vectorized_description
+    
+
+
+
+
+
+def transcribe_audio(audio_file):
+    myarray = np.load(audio_file)
+    audio_file = audio_file.replace('npy','wav')
+    wavio.write(audio_file, myarray, 44100 ,sampwidth=1)
+
+    audio_input = speechsdk.audio.AudioConfig(filename=audio_file)
+    speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_input)
+
+    result = speech_recognizer.recognize_once()
+    print(result.text)
+    return result.text
+
+
+def main():
+    speech_key, service_region = '4203927a90be4b1785cee6bdd8310f48', "eastus"
+    speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
+
+
+
 
 def adjust_target(target_adjuster,predicted_target_pose):
 
@@ -232,12 +313,15 @@ def load_model(dir_path,config):
     action_predictor.load_state_dict(torch.load(dir_path + '/../action_predictor/experiments/' + config["action_predictor_model"] + '/checkpoints/last_epoch_model.pth'))
     action_predictor.eval().cuda()
 
-    target_adjuster = Target_Adjuster()
-    target_adjuster = nn.DataParallel(target_adjuster)
-    target_adjuster.load_state_dict(torch.load(dir_path + '/../target_adjuster/experiments/' + config["target_adjuster_model"] + '/checkpoints/last_epoch_model.pth'))
-    target_adjuster.eval().cuda()
+    # target_adjuster = Target_Adjuster()
+    # target_adjuster = nn.DataParallel(target_adjuster)
+    # target_adjuster.load_state_dict(torch.load(dir_path + '/../target_adjuster/experiments/' + config["target_adjuster_model"] + '/checkpoints/last_epoch_model.pth'))
+    # target_adjuster.eval().cuda()
+    dataset = Target_Predictor_Dataset('/scratches/robot_2/fml35/mphil_project/navigation/target_pose/training_data1/data_transcribed_new.csv',250)
+    lstm_model = LSTM_model(32,5,dataset.len_vocab)
 
-    return pose_model,action_predictor,target_adjuster
+
+    return pose_model,action_predictor,LSTM_model,dataset
 
 def main():
     print('Begin testing...')
@@ -254,7 +338,7 @@ def main():
         converter = load_converter()
         
         #load model
-        pose_model,action_predictor,target_adjuster = load_model(dir_path,config)
+        pose_model,action_predictor,lstm_model,text_dataset = load_model(dir_path,config)
 
         with torch.no_grad():
             for j in range(config["number_tests"]):
@@ -264,7 +348,7 @@ def main():
                 os.mkdir(test_folder)
                 os.mkdir(test_folder + '/images')
 
-                history_dict = perform_test(pose_model,action_predictor,target_adjuster,config,converter,test_folder,dir_path,s)
+                history_dict = perform_test(pose_model,action_predictor,lstm_model,text_dataset,config,converter,test_folder,dir_path,s)
                 plot_trajectory(history_dict, test_folder,converter,'final')
                 plot_action_predictions(history_dict,test_folder,config)
                 visualise_poses(history_dict,test_folder)

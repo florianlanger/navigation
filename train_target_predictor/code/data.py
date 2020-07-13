@@ -1,6 +1,8 @@
 from torch.utils import data
 import json
 import torch
+import re
+import ast
 
 
 
@@ -11,14 +13,32 @@ class Target_Predictor_Dataset(data.Dataset):
         self.cubes = torch.empty((number_examples,6)).cuda()
         self.descriptions_strings = []
         self.descriptions_lengths = torch.zeros(number_examples).cuda()
+        
         with open(file_path, 'r') as csv_file:
             for i in range(number_examples):
                     line = csv_file.readline()
-                    dictionary = json.loads(line)
-                    self.target_poses[i] = torch.tensor(dictionary["target_pose"])
-                    self.cubes[i] = torch.tensor(dictionary["cube"])
-                    self.descriptions_strings.append(dictionary["description"])
-                    self.descriptions_lengths[i] = len(dictionary["description"].split())
+                    # for dict training data
+                    # dictionary = json.loads(line)
+                    # self.target_poses[i] = torch.tensor(dictionary["target_pose"])
+                    # self.cubes[i] = torch.tensor(dictionary["cube"])
+                    # self.descriptions_strings.append(dictionary["description"])
+                    # self.descriptions_lengths[i] = len(dictionary["description"].split())
+
+                    # self.target_poses[i] = torch.tensor(line[])
+                    # self.cubes[i] = torch.tensor(dictionary["cube"])
+                    # self.descriptions_strings.append(dictionary["description"])
+                    # self.descriptions_lengths[i] = len(dictionary["description"].split())
+                    result = re.findall('\[(.*?)\]', line)
+                    cube = torch.tensor(ast.literal_eval('['+result[0]+']'))
+                    target_pose = torch.tensor(ast.literal_eval('['+result[1]+']'))
+                    description = line.rsplit(',', 1)[1].rstrip("\n").replace('.','').lower()
+                    self.target_poses[i] = target_pose
+                    self.cubes[i] = cube
+                    self.descriptions_strings.append(description)
+                    self.descriptions_lengths[i] = len(description.split())
+           
+   
+
        
         # create vocab, i.e. mapping from words to integers
         self.vocab = ['<pad>'] + sorted(set([word for sentence in self.descriptions_strings for word in sentence.split()]))
@@ -35,9 +55,10 @@ class Target_Predictor_Dataset(data.Dataset):
     def __getitem__(self,index):
         return self.cubes[index],self.vectorized_descriptions[index],self.descriptions_lengths[index],self.descriptions_strings[index],self.target_poses[index]
 
-# training_data = Target_Predictor_Dataset('/scratches/robot_2/fml35/mphil_project/navigation/target_pose/training_data/data.csv',80)
+# training_data = Target_Predictor_Dataset('/scratches/robot_2/fml35/mphil_project/navigation/target_pose/training_data1/data_transcribed_new.csv',250)
 
 # train_loader = data.DataLoader(training_data, batch_size = 3)
 # for data in train_loader:
-#        print(data)
+#        #print(data)
+#        pass
      

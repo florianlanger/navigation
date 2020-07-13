@@ -11,7 +11,7 @@ from datetime import datetime
 from torch.utils import data
 
 from model import LSTM_model
-from loss import calc_loss,calc_correct
+from loss import calc_loss_single_node,calc_loss_two_nodes,calc_correct
 from visualisations import visualise,plot_history
 from data import Target_Predictor_Dataset
 from utilities import convert_pose_to_one_hot, create_directories,write_to_file
@@ -25,8 +25,12 @@ def train(model,optimizer,data_loader,config,epoch,exp_path,kind):
         model.zero_grad()
         output = model(cube_dimensions,descriptions,length_descriptions)
 
+        softmax = nn.Softmax(dim=2)
+        output = softmax(output.reshape((-1,9*9*9,2)))
+
         target = convert_pose_to_one_hot(cube_dimensions,target_poses)
-        loss = calc_loss(output, target)
+        loss = calc_loss_two_nodes(output, target)
+        #loss = calc_loss_single_node(output, target)
         
         if kind =='train':
             loss.backward()
@@ -34,16 +38,16 @@ def train(model,optimizer,data_loader,config,epoch,exp_path,kind):
 
         with torch.no_grad():
             total_loss += loss.item()
-            total_correct += calc_correct(output,target)
+            total_correct += calc_correct(output[:,:,0],target)
 
             if (epoch -1) % config["visualisations"]["interval"] ==0:
                 if kind =='train':
                     if i == 0:
-                        visualise(output.detach().cpu(),target.detach().cpu(),np.array(cube_dimensions.detach().cpu()),text_descriptions,'{}/visualisations/predictions/train/epoch_{}'.format(exp_path,epoch),config)
+                        visualise(output[:,:,0].detach().cpu(),target.detach().cpu(),np.array(cube_dimensions.detach().cpu()),text_descriptions,'{}/visualisations/predictions/train/epoch_{}'.format(exp_path,epoch),config)
 
                 if kind =='val':
                     if i == 0:
-                        visualise(output.detach().cpu(),target.detach().cpu(),np.array(cube_dimensions.detach().cpu()),text_descriptions,'{}/visualisations/predictions/val/epoch_{}'.format(exp_path,epoch),config)
+                        visualise(output[:,:,0].detach().cpu(),target.detach().cpu(),np.array(cube_dimensions.detach().cpu()),text_descriptions,'{}/visualisations/predictions/val/epoch_{}'.format(exp_path,epoch),config)
 
     average_loss = total_loss/(i+1)
     accuracy = total_correct/(float(i+1)*cube_dimensions.shape[0])
@@ -76,18 +80,18 @@ def main():
     #create directories for checkpoints, visualisations and copy code and config
     create_directories(exp_path)
 
-    dataset = Target_Predictor_Dataset('/scratches/robot_2/fml35/mphil_project/navigation/target_pose/training_data/data.csv',80)
-    train_data,val_data = torch.utils.data.random_split(dataset,(70,10))
-    train_loader = data.DataLoader(train_data, batch_size = config["training"]["batch_size"])
-    val_loader = data.DataLoader(val_data, batch_size = config["training"]["batch_size"])
+    dataset = Target_Predictor_Dataset('/scratches/robot_2/fml35/mphil_project/navigation/target_pose/training_data1/data_transcribed_new.csv',250)
+    train_data,val_data = torch.utils.data.random_split(dataset,(200,50))
+    train_loader = data.DataLoader(train_data, batch_size = config["training"]["batch_size"], shuffle=True)
+    val_loader = data.DataLoader(val_data, batch_size = config["training"]["batch_size"],shuffle=True)
             
     # load model and optimiser
 
     model = LSTM_model(config["model"]["embedding_dim"],config["model"]["hidden_dim"],dataset.len_vocab)
 
 
-    for parameters in model.parameters():
-        print(parameters.shape)
+    # for parameters in model.parameters():
+    #     print(parameters.shape)
         #print('Layer {}: {} elements'.format(layer_tensor_name, torch.numel(tensor)))
     model.cuda()
     optimizer = optim.Adam(model.parameters(), lr=config["training"]["learning_rate"])
