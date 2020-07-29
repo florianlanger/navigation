@@ -1,11 +1,12 @@
 {
-    "experiment_name": "exp_03",
+    "experiment_name": "exp_05",
     "gpu": "1",
+    "mode": "normal",
     "training": 
         {
-            "n_epochs": 2000,
-            "learning_rate": 0.01,
-            "save_interval": 20,
+            "n_epochs": 5000,
+            "learning_rate": 0.001,
+            "save_interval": 200,
             "batch_size": 5
         },
     "loss":
@@ -14,12 +15,12 @@
         },
     "visualisations":
         {
-            "interval": 20,
+            "interval": 50,
             "number": 5
         },
     "model":
         {
-            "hidden_dim": 32,
-            "embedding_dim": 5
+            "embedding_dim": 300,
+            "number_modes": 4
         }
     }

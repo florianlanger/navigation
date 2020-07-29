@@ -329,4 +329,7 @@
 0328,[4.704594045660156, 0.994815014937495, 2.064314534351977, 1.0, 1.0, 1.0],[5.704594045660156, 1.494815014937495, 4.064314534351977],1 1/2 meters above the queue behind it and to the left,1 1/2 meters above the cube behind it and to the left
 0329,[4.933589806657292, -0.1967517149910225, 2.0137995488100366, 1.0, 1.0, 1.0],[6.433589806657292, -0.1967517149910225, 2.0137995488100366],1 meter behind the center of the cube,1 meter behind the center of the cube
 0330,[5.589262670229791, 0.581651541990641, 2.318991274078532, 1.0, 1.0, 1.0],[6.589262670229791, -0.41834845800935905, 3.318991274078532],Off meter to Dubai to the cube and behind the cube and slightly above,Off meter to Dubai to the cube and behind the cube and slightly above
-0331,[4.316300918943516, 0.2580628057280303, 2.215070493484812, 1.0, 1.0, 1.0],[3.816300918943516, -1.7419371942719697, 0.715070493484812],1 meter to the right of the cube and below it close to the front,1 meter to the right of the cube and below it close to the front
+0331,[0.0, 0.0, 0.0, 1.0, 1.0, 1.0],[-0.5, 1., 0.5],next to the corner of the cube,next to the corner of the cube
+0332,[0.0, 0.0, 0.0, 1.0, 1.0, 1.0],[0.5, 1., 0.5],next to the corner of the cube,next to the corner of the cube
+0333,[0.0, 0.0, 0.0, 1.0, 1.0, 1.0],[-0.5, -1., 0.5],next to the corner of the cube,next to the corner of the cube
+0334,[0.0, 0.0, 0.0, 1.0, 1.0, 1.0],[0.5, -1., 0.5],next to the corner of the cube,next to the corner of the cube

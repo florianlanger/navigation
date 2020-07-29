@@ -59,6 +59,5 @@ class Target_Predictor_Dataset(data.Dataset):
 
 # train_loader = data.DataLoader(training_data, batch_size = 3)
 # for data in train_loader:
-#        #print(data)
 #        pass
      

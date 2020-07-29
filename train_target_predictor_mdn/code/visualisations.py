@@ -23,8 +23,8 @@ def one_view_probabilities(ax,output,target,cube,text=None):
         if output[i] > 0.9:
             list_high_prob_indices.append(i)
 
-    positions = positions[output>0.01]
-    output = output[output>0.01]
+    # positions = positions[output>0.01]
+    # output = output[output>0.01]
     p = ax.scatter(positions[:,0],positions[:,1],positions[:,2],c=output,cmap='viridis_r')
 
 
@@ -41,9 +41,10 @@ def one_view_probabilities(ax,output,target,cube,text=None):
     ax.plot([0,0],[0,0],[0,1.5],'--',color='black')
 
     if text:
-        plt.figtext(0.3, 0.9, text, wrap=True, horizontalalignment='center', fontsize=12)
+        for i,item in enumerate(text):
+            plt.figtext(0.8, 0.83-0.4*i, item, fontsize=12,horizontalalignment='center',verticalalignment='center')
 
-    plt.figtext(0.7, 0.9, str(list_high_prob_indices), wrap=True, horizontalalignment='center', fontsize=12)
+    #plt.figtext(0.7, 0.9, str(list_high_prob_indices), wrap=True, horizontalalignment='center', fontsize=12)
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.set_zlabel('z')
@@ -57,19 +58,20 @@ def one_view_probabilities(ax,output,target,cube,text=None):
 
     return ax, p
     
-def visualise(output,target,cube,description,path,config):
-    for i in range(config["visualisations"]["number"]):
+def visualise(output,target,cube,description,path,config,pi,normal):
+    for i in range(min(config["visualisations"]["number"],output.shape[0])):
+        text = "multimodal coefficients: \n" + str(pi.probs[i].detach().cpu().numpy().round(2)) + "\nmeans:\n" + str(normal.mean[i].detach().cpu().numpy().round(2)) + '\nstd:\n' + str(normal.stddev[i].detach().cpu().numpy().round(2))
         fig = plt.figure(figsize=plt.figaspect(0.3))
-        ax1 = fig.add_subplot(1,3,1, projection='3d')
-        ax1,p = one_view_probabilities(ax1,output[i],target[i],cube[i],description[i])
+        ax1 = fig.add_subplot(1,4,1, projection='3d')
+        ax1,p = one_view_probabilities(ax1,output[i],target[i],cube[i],[description[i],text])
         fig.colorbar(p, ax=ax1)
         ax1.view_init(elev=40, azim=200)
 
-        ax2 = fig.add_subplot(1,3,2, projection='3d')
+        ax2 = fig.add_subplot(1,4,2, projection='3d')
         ax2,_ = one_view_probabilities(ax2,output[i],target[i],cube[i])
         ax2.view_init(elev=0, azim=180)
 
-        ax3 = fig.add_subplot(1,3,3, projection='3d')
+        ax3 = fig.add_subplot(1,4,3, projection='3d')
         ax3,_ = one_view_probabilities(ax3,output[i],target[i],cube[i])
         ax3.view_init(elev=90, azim=180)
     
@@ -100,11 +102,8 @@ def plot_history(file_path,store_path,epoch):
     os.mkdir(path)
     metrics = ['loss','acc']
     min_epoch = 0
-    if epoch > 50:
-        min_epoch = 40
-
     for metric in metrics:
-        plot_one_metric(metric,['train','val'],df,min_epoch,path)
+        plot_one_metric(metric,['train'],df,min_epoch,path)
     plot_combined(['loss','acc'],[['train','val'],['train','val']],df,min_epoch,path)
 
 def plot_one_metric(metric,kinds,df,min_epoch,path):
