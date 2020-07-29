@@ -1,0 +1,11 @@
+{
+    "name": "test_01",
+    "probability_grid":
+        {
+            "step_sizes": [0.2,0.2,0.2],
+            "min_position": [0.0,0,0],
+            "max_position": [4.0,4,2],
+            "points_per_dim": [20,20,10]
+        } 
+    }
+        

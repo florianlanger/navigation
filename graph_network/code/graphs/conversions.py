@@ -9,18 +9,18 @@ class Converter(object):
         self.number_poses = number_poses
         self.number_dims = min_position.shape[0]
         self.corners_no_fly_zone = corners_no_fly_zone
-        self.number_poses_each_dim = torch.round((self.max_position - self.min_position)/self.steps).cuda() + 1
+        self.number_poses_each_dim = torch.round((self.max_position - self.min_position)/self.steps)+1 #.cuda() + 1
         if self.number_dims == 4:
             self.prod_number_poses = torch.tensor([torch.prod(self.number_poses_each_dim[0:]),torch.prod(self.number_poses_each_dim[1:]),
-            torch.prod(self.number_poses_each_dim[2:]),torch.prod(self.number_poses_each_dim[3:]),1.]).cuda()
+            torch.prod(self.number_poses_each_dim[2:]),torch.prod(self.number_poses_each_dim[3:]),1.]) #.cuda()
         elif self.number_dims == 3:
             self.prod_number_poses = torch.tensor([torch.prod(self.number_poses_each_dim[0:]),torch.prod(self.number_poses_each_dim[1:]),
-            torch.prod(self.number_poses_each_dim[2:]),1.]).cuda()
+            torch.prod(self.number_poses_each_dim[2:]),1.]) #.cuda()
     
 
     def index_to_pose(self,index):
         if index < self.number_poses and index >=0:
-            index_each_direction = index * torch.ones(self.number_dims).cuda()
+            index_each_direction = index * torch.ones(self.number_dims) #.cuda()
             index_each_direction = (index_each_direction % self.prod_number_poses[:self.number_dims])// self.prod_number_poses[1:]
             pose = self.min_position + self.steps * index_each_direction
             return pose
@@ -65,7 +65,7 @@ class Converter(object):
             return pose
 
     def initialise_move_to_coords(self):
-        zeros = torch.tensor([0.,0.,0.,0.]).cuda()
+        zeros = torch.tensor([0.,0.,0.,0.]) #.cuda()
         stay = zeros.clone()
         term = zeros.clone()
 

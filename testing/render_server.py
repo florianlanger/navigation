@@ -15,28 +15,10 @@ def set_camera_6dof(scene,x,y,z,rx,ry,rz):
 
 
 def render_pose(pose,path,render_name):
-    #pose should be numpy array with first three numbers x,y,z coords and 4th number rotation between 0 and 1 
-    bpy.context.scene.render.engine = 'CYCLES'
-    bpy.context.scene.cycles.max_bounces = 12
-    bpy.context.scene.cycles.diffuse_bounces = 1
-    bpy.context.scene.cycles.glossy_bounces = 1
-    bpy.context.scene.cycles.transparent_max_bounces = 1
-    bpy.context.scene.cycles.transmission_bounces = 1
-    bpy.context.scene.cycles.device = 'CPU'
-    bpy.context.scene.render.tile_x = 10
-    bpy.context.scene.render.tile_y = 10
-    bpy.context.scene.cycles.samples = 128
+    #pose should be numpy array with first three numbers x,y,z coords and 4th number rotation between 0 and 1
 
     #set global parameter for blender
     scene = bpy.data.scenes["Scene"]
-    scene.render.resolution_x = 100
-    scene.render.resolution_y = 100
-    fov = 50.0
-    pi = 3.14159265
-    # Set camera fov in degrees
-    scene.camera.data.angle = fov*(pi/180.0)
-    # Set camera rotation in euler angles
-    scene.camera.rotation_mode = 'XYZ'
 
     rx = 90.
     ry = 0
@@ -55,16 +37,11 @@ def render_pose(pose,path,render_name):
 def main():
 
     # define scene parameters
-    bpy.context.scene.render.engine = 'CYCLES'
-    bpy.context.scene.cycles.max_bounces = 12
-    bpy.context.scene.cycles.diffuse_bounces = 1
-    bpy.context.scene.cycles.glossy_bounces = 1
-    bpy.context.scene.cycles.transparent_max_bounces = 1
-    bpy.context.scene.cycles.transmission_bounces = 1
-    bpy.context.scene.cycles.device = 'CPU'
-    bpy.context.scene.render.tile_x = 10
-    bpy.context.scene.render.tile_y = 10
-    bpy.context.scene.cycles.samples = 128
+    bpy.context.scene.render.engine = 'BLENDER_EEVEE'
+    bpy.context.scene.eevee.taa_render_samples = 1
+
+
+    print(bpy.context.scene.render.engine)
 
     #set global parameter for blender
     scene = bpy.data.scenes["Scene"]
@@ -77,13 +54,9 @@ def main():
     # Set camera rotation in euler angles
     scene.camera.rotation_mode = 'XYZ'
 
-    rx = 90.
-    ry = 0
-
-
     # define server
     HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
-    PORT = 65433       # Port to listen on (non-privileged ports are > 1023)
+    PORT = 65437      # Port to listen on (non-privileged ports are > 1023)
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((HOST, PORT))
