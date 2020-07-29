@@ -7,8 +7,14 @@ def calc_loss_single_node(output,target):
 def calc_loss_two_nodes(output,target):
     return - torch.mean(10 * target * torch.log(output[:,:,0]) + (1-target)* torch.log(output[:,:,1]))
 
+def calc_Euclidean_distance(normal,target_poses):
+    print(normal.mean.shape)
+    print(target_poses.shape)
+
 
 def calc_correct(output,target):
+    #print('output',output)
+    #print('target',target)
     _,argmax_output =  torch.max(output,dim=1)
     
     number_correct = 0

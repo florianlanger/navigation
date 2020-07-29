@@ -1,9 +1,9 @@
 {
-    "experiment_name": "exp_03",
+    "experiment_name": "exp_01",
     "gpu": "1",
     "training": 
         {
-            "n_epochs": 2000,
+            "n_epochs": 1000,
             "learning_rate": 0.01,
             "save_interval": 20,
             "batch_size": 5
@@ -14,12 +14,11 @@
         },
     "visualisations":
         {
-            "interval": 20,
+            "interval": 10,
             "number": 5
         },
     "model":
         {
-            "hidden_dim": 32,
-            "embedding_dim": 5
+            "embedding_dim": 300
         }
     }

@@ -9,6 +9,8 @@ def calc_loss_two_nodes(output,target):
 
 
 def calc_correct(output,target):
+    #print('output',output)
+    #print('target',target)
     _,argmax_output =  torch.max(output,dim=1)
     
     number_correct = 0
