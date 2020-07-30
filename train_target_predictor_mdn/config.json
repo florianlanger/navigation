@@ -1,12 +1,12 @@
 {
-    "experiment_name": "exp_05",
-    "gpu": "1",
+    "experiment_name": "exp_06_fixed_bug_better_visuailsation",
+    "gpu": "0",
     "mode": "normal",
     "training": 
         {
-            "n_epochs": 5000,
+            "n_epochs": 1000,
             "learning_rate": 0.001,
-            "save_interval": 200,
+            "save_interval": 20,
             "batch_size": 5
         },
     "loss":
@@ -15,7 +15,7 @@
         },
     "visualisations":
         {
-            "interval": 50,
+            "interval": 10,
             "number": 5
         },
     "model":
