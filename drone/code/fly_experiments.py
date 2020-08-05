@@ -64,23 +64,23 @@ def main():
     tello.connect()
     tello.streamon()
 
-    tello.takeoff()
+    #tello.takeoff()
 
     start_time = int(round(time.time() * 1000))
     last_action_time = int(round(time.time() * 1000))
     action_counter = 0
-    while action_counter < len(list_of_commands):
-        current_time = int(round(time.time() * 1000))
+    # while action_counter < len(list_of_commands):
+    #     current_time = int(round(time.time() * 1000))
         
-        if current_time - last_action_time > delay:
-            execute_command(tello,list_of_commands[action_counter])
-            action_counter += 1
-            last_action_time = int(round(time.time() * 1000))
+        # if current_time - last_action_time > delay:
+        #     execute_command(tello,list_of_commands[action_counter])
+        #     action_counter += 1
+        #     last_action_time = int(round(time.time() * 1000))
 
-        save_image(exp_path,start_time,current_time,tello)
+    save_image(exp_path,start_time,last_action_time,tello)#current_time,tello)
     
 
-    tello.land()
+    # tello.land()
     tello.end()
 
 
