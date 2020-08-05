@@ -43,19 +43,16 @@ def save_image(exp_path,start_time,current_time,tello):
 
 def main():
 
-    name = 'room_books_scenario_05_flying'
+    name = 'test_fov'
     # Bookkeeping 
     dir_path = os.path.dirname(os.path.realpath(__file__))
     exp_path = '{}/../experiments/{}_{}'.format(dir_path, name,datetime.now().strftime("time_%H_%M_%S_date_%d_%m_%Y"))
     make_directories(exp_path)
 
     list_of_commands = [
-    ['forward',20],['forward',20],
-    ['cw',90],
-    ['forward',20],['forward',20],['forward',20],['forward',20],
-    ['ccw',90],
-    ['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],
-    ['backward',20],['backward',20],['backward',20]
+    ['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],
+    ['cw',90],['cw',90],
+    ['forward',20],['forward',20],['forward',20],['forward',20],['forward',20]
     ]
 
     delay = 0

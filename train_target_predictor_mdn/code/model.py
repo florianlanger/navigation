@@ -23,9 +23,9 @@ class MixtureDensityNetwork(nn.Module):
 
     def forward(self, x):
         if self.mode == "debug":
-            embeddings = torch.rand((len(x),300)).cuda()
+            embeddings = torch.rand((len(x),300))
         elif self.mode == "normal":
-            embeddings = torch.zeros(len(x),300).cuda()
+            embeddings = torch.zeros(len(x),300)
             for i in range(len(x)):
                 embeddings[i] = torch.from_numpy(self.ft_model.get_sentence_vector(x[i]))
         

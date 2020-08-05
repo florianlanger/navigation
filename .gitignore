@@ -3,6 +3,7 @@ tests/
 graph_network/graphs/
 image_to_action/graphs/
 networks/
+obj_files/
 __pycache__/
 cc.en.300.bin
 cc.en.300.bin.gz
