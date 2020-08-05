@@ -8,7 +8,7 @@ import os
 import pickle
 
 #color=viridis(output[i].item())
-def one_view_probabilities(ax,output,target,cube,text=None):
+def one_view_probabilities(ax,output,target,text=None):
 
 
     list_high_prob_indices = []
@@ -18,23 +18,22 @@ def one_view_probabilities(ax,output,target,cube,text=None):
     for i in range(len(output)):
         index_1, index_2, index_3 = i // 81,  (i % 81)  // 9, i % 9
         indices = np.array([index_1,index_2,index_3])
-        position = cube[:3] + (indices - 4) * cube[3:6]/2
+        position = (indices - 4) * np.ones(3) / 2
         positions[i] = position
         if output[i] > 0.9:
             list_high_prob_indices.append(i)
 
     # positions = positions[output>0.01]
     # output = output[output>0.01]
+    max_50_indices = np.argpartition(output, -50)[-50:]
+    positions = positions[max_50_indices]
+    output = output[max_50_indices]
     p = ax.scatter(positions[:,0],positions[:,1],positions[:,2],c=output,cmap='viridis_r')
 
 
     # visualise target
-    for i in range(len(target)):
-        if target[i] == 1:
-            index_1, index_2, index_3 = i // 81,  (i % 81)  // 9, i % 9
-            indices = np.array([index_1, index_2, index_3])
-            position = cube[:3] + (indices - 4) * cube[3:6]/2 + np.array([0.05,0.05,0.05])
-            ax.scatter(position[0],position[1],position[2],color='red')    
+    position = target + np.array([0.05,0.05,0.05])
+    ax.scatter(position[0],position[1],position[2],color='red')    
 
     # visualise camera
     ax.scatter(0,0,1.5,color='black')
@@ -49,30 +48,30 @@ def one_view_probabilities(ax,output,target,cube,text=None):
     ax.set_ylabel('y')
     ax.set_zlabel('z')
 
-    ax.set_xlim(0,cube[0] + 2*cube[3])
-    ax.set_ylim(cube[1] - 2*cube[4],cube[1] + 2*cube[4])
-    ax.set_zlim(0,cube[2] + 2*cube[5])
+    ax.set_xlim(-2.1,2.1)
+    ax.set_ylim(-2.1,2.1)
+    ax.set_zlim(-2.1,2.1)
 
     # add cube 
-    ax = plot_no_fly(ax,np.stack([cube[:3] - cube[3:6]/2,cube[:3] + cube[3:6]/2]))
+    ax = plot_no_fly(ax,np.stack([np.array([-0.5,-0.5,-0.5]),np.array([0.5,0.5,0.5])]))
 
     return ax, p
     
-def visualise(output,target,cube,description,path,config,pi,normal):
+def visualise(output,target,description,path,config,pi,normal):
     for i in range(min(config["visualisations"]["number"],output.shape[0])):
         text = "multimodal coefficients: \n" + str(pi.probs[i].detach().cpu().numpy().round(2)) + "\nmeans:\n" + str(normal.mean[i].detach().cpu().numpy().round(2)) + '\nstd:\n' + str(normal.stddev[i].detach().cpu().numpy().round(2))
         fig = plt.figure(figsize=plt.figaspect(0.3))
         ax1 = fig.add_subplot(1,4,1, projection='3d')
-        ax1,p = one_view_probabilities(ax1,output[i],target[i],cube[i],[description[i],text])
+        ax1,p = one_view_probabilities(ax1,output[i],target[i],[description[i],text])
         fig.colorbar(p, ax=ax1)
         ax1.view_init(elev=40, azim=200)
 
         ax2 = fig.add_subplot(1,4,2, projection='3d')
-        ax2,_ = one_view_probabilities(ax2,output[i],target[i],cube[i])
+        ax2,_ = one_view_probabilities(ax2,output[i],target[i])
         ax2.view_init(elev=0, azim=180)
 
         ax3 = fig.add_subplot(1,4,3, projection='3d')
-        ax3,_ = one_view_probabilities(ax3,output[i],target[i],cube[i])
+        ax3,_ = one_view_probabilities(ax3,output[i],target[i])
         ax3.view_init(elev=90, azim=180)
     
         fig.savefig(path + '_example_{}.png'.format(i),dpi=150)

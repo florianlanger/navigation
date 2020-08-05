@@ -23,7 +23,7 @@ from utilities import convert_pose_to_one_hot, create_directories,write_to_file,
 def train(model,optimizer,data_loader,config,epoch,exp_path,kind):
     total_loss = 0
     total_correct = 0
-    for i,(cube_dimensions,descriptions,target_poses) in enumerate(data_loader):
+    for i,(descriptions,target_poses) in enumerate(data_loader):
 
         model.zero_grad()
         pi,normal = model(descriptions)
@@ -34,24 +34,24 @@ def train(model,optimizer,data_loader,config,epoch,exp_path,kind):
             loss.backward()
             optimizer.step()
 
-        target = convert_pose_to_one_hot(cube_dimensions,target_poses)
-        predicted_probabilities = calc_node_probabilities(pi, normal, cube_dimensions)
+        #target = convert_pose_to_one_hot(target_poses)
+        predicted_probabilities = calc_node_probabilities(pi, normal)
 
         with torch.no_grad():
             total_loss += loss.item()
-            total_correct += calc_correct(predicted_probabilities,target)
+            #total_correct += calc_correct(predicted_probabilities,target)
 
             if (epoch -1) % config["visualisations"]["interval"] ==0:
                 if kind =='train':
                     if i == 0:
-                        visualise(predicted_probabilities,target.detach().cpu(),np.array(cube_dimensions.detach().cpu()),descriptions,'{}/visualisations/predictions/train/epoch_{}'.format(exp_path,epoch),config,pi,normal)
+                        visualise(predicted_probabilities,target_poses.detach().cpu().numpy(),descriptions,'{}/visualisations/predictions/train/epoch_{}'.format(exp_path,epoch),config,pi,normal)
 
                 if kind =='val':
                     if i == 0:
-                        visualise(predicted_probabilities,target.detach().cpu(),np.array(cube_dimensions.detach().cpu()),descriptions,'{}/visualisations/predictions/val/epoch_{}'.format(exp_path,epoch),config,pi,normal)
+                        visualise(predicted_probabilities,target_poses.detach().cpu().numpy(),descriptions,'{}/visualisations/predictions/val/epoch_{}'.format(exp_path,epoch),config,pi,normal)
 
     average_loss = total_loss/(i+1)
-    accuracy = total_correct/(float(i+1)*cube_dimensions.shape[0])
+    accuracy = total_correct/(float(i+1)*target_poses.shape[0])
 
     print('Epoch: {} Average {} loss: {:.4f} Accuracy: {:.4f} \n'.format(epoch,kind,average_loss,accuracy))
 

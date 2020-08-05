@@ -9,6 +9,7 @@ class Target_Predictor_Dataset(data.Dataset):
     def __init__(self, file_path,number_examples):
         self.number_examples = number_examples
         self.target_poses = torch.empty((number_examples,3)).cuda()
+        self.normalised_target_poses = torch.empty((number_examples,3)).cuda()
         self.cubes = torch.empty((number_examples,6)).cuda()
         self.descriptions_strings = []
         self.descriptions_lengths = torch.zeros(number_examples).cuda()
@@ -24,12 +25,15 @@ class Target_Predictor_Dataset(data.Dataset):
                     self.cubes[i] = cube
                     self.descriptions_strings.append(description)
                     self.descriptions_lengths[i] = len(description.split())
+                    self.normalised_target_poses[i] = target_pose - cube[:3]
+
+        print(self.normalised_target_poses[:10])
 
     def __len__(self):
         return self.number_examples
 
     def __getitem__(self,index):
-        return self.cubes[index],self.descriptions_strings[index],self.target_poses[index]
+        return self.descriptions_strings[index],self.normalised_target_poses[index]
 
 
      
