@@ -4,6 +4,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from functools import reduce
 import numpy.ma as ma
+import pickle
+from tqdm import tqdm
 #//obtaining image plane rotation matrix
 #double[,] rot = PixelOperations.multiply(PixelOperations.multiply(PixelOperations.NewRotateAroundZ(rotation[2]), PixelOperations.NewRotateAroundY(rotation[1])), PixelOperations.NewRotateAroundX(rotation[0]));
 
@@ -206,7 +208,7 @@ def equirectangular_crop_id_image(source,params):
 
     mask = np.zeros((H_source,W_source,3))
     mask[np.min(eq_row):np.max(eq_row),np.min(eq_col):np.max(eq_col),:] = 1
-    mask_as_start_and_end_indices = np.array([[np.min(eq_row),np.max(eq_row)],[np.min(eq_col),np.max(eq_col)]])
+    mask_as_start_and_end_indices = [[np.min(eq_row),np.max(eq_row)],[np.min(eq_col),np.max(eq_col)]]
     
     assert (np.min(eq_row)>=0)
     assert (np.min(eq_col) >= 0)
@@ -217,7 +219,6 @@ def equirectangular_crop_id_image(source,params):
 
 def equirectangular_crop(source,params):
     id_image,mask,mask_as_start_and_end_indices=equirectangular_crop_id_image(source,params)
-    print('id_image',id_image)
     # original: eq_row = id_image/np.int32(source.shape[1])
     eq_row = np.int32(np.round(id_image/np.int32(source.shape[1])))
     eq_col = id_image%np.int32(source.shape[1])
@@ -232,19 +233,22 @@ if __name__ == "__main__":
          'H_res': 512,
          'W_res': 512,
          'plane_f':0.05,
-         'HFoV':(60 / 360) * 2* np.pi,
-         'VFoV': (30 / 360) *np.pi * 2,
+         'HFoV':(55 / 360) * 2* np.pi,
+         'VFoV': (45 / 360) *np.pi * 2,
          'angles': [0,np.pi/2,0] #[x,y,z] # vary just rotation of z, z = 0 corresponnds to center crop, increasing z will shift crop to the right
         }
-    params['R'] = euler_to_mat(z=params['angles'][2],y=params['angles'][1],x=params['angles'][0])
+    all_masks = {}
 
     fname='facing_bookshelf_part2_frame_00100.png'
     img = cv2.imread(fname)
-    result,mask,mask_as_start_and_end_indices=equirectangular_crop(img,params)
-    print('result shape '+str(result.shape))
-    #assert( np.sum(np.abs(result-result_slow))<0.00001)
-    cv2.imwrite('./own_test/'+fname.split('.')[0]+'_params_'+str(params['angles']) + '.png',result)
-    cv2.imwrite('./own_test/masked_image_' + str(params['angles']) + '.png',mask * img)
+    for z in tqdm(range(-180,180)): 
+        params['R'] = euler_to_mat(z=z * np.pi / 180,y=params['angles'][1],x=params['angles'][0])
+        result,mask,mask_as_start_and_end_indices=equirectangular_crop(img,params)
+        all_masks[z] = mask_as_start_and_end_indices
+        #assert( np.sum(np.abs(result-result_slow))<0.00001)
+        #cv2.imwrite('./own_test/'+fname.split('.')[0]+'_params_'+str(params['angles']) + '.png',result)
+        #cv2.imwrite('./own_test/masked_image_' + str(params['angles']) + '.png',mask * img)
     #np.savez('mask.npz',mask_as_start_and_end_indices=mask_as_start_and_end_indices)
-    
+    with open('../../pose_room_books/mask_dict.pkl',"wb") as file:
+        pickle.dump(all_masks,file)
 
