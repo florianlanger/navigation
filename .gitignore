@@ -6,3 +6,6 @@ networks/
 __pycache__/
 cc.en.300.bin
 cc.en.300.bin.gz
+merged.ply
+new_reprojections/
+mask.npz
