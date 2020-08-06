@@ -4,6 +4,7 @@ from scipy.spatial.transform import Rotation as R
 import numpy as np
 from PIL import Image
 import glob
+import pickle
 
 # with open(os.path.abspath('/data/cvfs/fml35/own_datasets/localisation/dataset_01_room_books/reconstruction.json'), 'r') as fp:
 #     original_dict = json.load(fp)[0]
@@ -19,14 +20,23 @@ import glob
 # with open('/data/cvfs/fml35/own_datasets/localisation/dataset_01_room_books/sfm_rotation_translation_in_world_coordinates.json', 'w') as file:
 #     json.dump(new_dict, file,indent = 4)
 
+path_to_reconstruction_json = '/Users/legend98/Google Drive/MPhil project/navigation/opensfm/cropping/reconstruction.json'
+path_to_original_image_folder = '/Users/legend98/Desktop'
 
-os.chdir("/data/cvfs/fml35/own_datasets/localisation/dataset_01_room_books/center_cropped_images")
+path_to_new_image_folder = '../../images'
+path_to_new_json_file = '../../data.json'
 
-list_images = glob.glob('*.png')
-os.chdir("/data/cvfs/fml35/own_datasets/localisation/dataset_01_room_books/center_cropped_images_small")
+number_orientations_per_image = 10
 
-for image_name in list_images:
-    image = Image.open('../center_cropped_images/' + image_name, mode = 'r')
-    #image = image.crop((1519,629,1519+882,629 + 662))
-    image = image.resize((200,150))
-    image.save(image_name)
+# with open(path_to_reconstruction_json), 'r') as fp:
+#     original_dict = json.load(fp)[0]
+with open('../../mask_dict.pkl',"rb") as file:
+    all_masks = pickle.load(file)
+
+for image_name in ['location_as_vfov.JPG']:#["facing_bookshelf_part2_frame_00100.png"]:#original_dict["shots"]:
+    image = Image.open(path_to_original_image_folder +'/'+ image_name, mode = 'r')
+    image = image.resize((3840,1920))
+    for i in range(-50,50,5):
+        m = all_masks[i]
+        cropped_img = image.crop((m[1][0], m[0][0], m[1][1], m[0][1])) 
+        cropped_img.save('test_crops/angle_{}.png'.format(i))

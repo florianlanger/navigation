@@ -24,8 +24,7 @@ class LSTM_model(nn.Module):
 
     def forward(self,cube_dimensions,descriptions,length_descriptions):
         embeds = self.embedding(descriptions)
-
-        packed_input = pack_padded_sequence(embeds, length_descriptions.cpu().numpy(), batch_first=True,enforce_sorted=False)
+        packed_input = pack_padded_sequence(embeds, length_descriptions.numpy(), batch_first=True,enforce_sorted=False)
 
         packed_output, (ht, ct) = self.lstm(packed_input)
 

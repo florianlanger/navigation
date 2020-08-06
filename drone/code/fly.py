@@ -19,17 +19,30 @@ import cv2
 import sys
 import json
 import subprocess
-from djitellopy import Tello
 import cv2, math, time
 import shutil
-#from pythonzenity import Entry
+import time
+import networkx as nx
+import fasttext
 
-sys.path.append(os.path.abspath("/Users/legend98/Google Drive/Cambridge Academic/MPhil project/navigation/drone"))
+sys.path.append(os.path.abspath("/Users/legend98/Google Drive/MPhil project/navigation/drone"))
+
+from tellopy.modified_tellopy import Tello
 
 from models.action_predictor import Decoder_Basic
 from visualisations import plot_trajectory, plot_action_predictions
 from models.pose import Pose_Model
 
+sys.path.append(os.path.abspath("/Users/legend98/Google Drive/MPhil project/navigation"))
+
+from graph_network.code.graphs.forward_no_fly_zone import objects_to_no_fly
+from graph_network.code.graphs.conversions import Converter
+
+
+from testing_mdn.test import update_target_probabilities_from_speech, find_current_target
+from testing_mdn.visualisations import plot_global_probability
+
+from train_target_predictor_mdn.code.model import MixtureDensityNetwork
 
 
 #make experiment
@@ -52,7 +65,8 @@ def make_directories(exp_path):
     os.mkdir(exp_path)
     os.mkdir(exp_path + '/images')
     os.mkdir(exp_path + '/trajectories')
-    os.mkdir(exp_path + '/action_predictions')
+    os.mkdir(exp_path + '/probabilities')
+    os.mkdir(exp_path + '/recordings')
     shutil.copytree(exp_path +'/../../code',exp_path +'/code')
 
 def find_pose(pose_model,image_name,exp_path):
@@ -63,53 +77,6 @@ def find_pose(pose_model,image_name,exp_path):
     pose = pose_model(image)[0]
     print(pose)
     return pose
-
-def instruction_to_index(text_instruction):
-    dict_instruction_to_index = {}
-    dict_instruction_to_index['Stay'] = 0
-    dict_instruction_to_index['Go forward'] = 1
-    dict_instruction_to_index['Go backward'] = 2
-    dict_instruction_to_index['Go left'] = 3
-    dict_instruction_to_index['Go right'] = 4
-    dict_instruction_to_index['Go up'] = 5
-    dict_instruction_to_index['Go down'] = 6 
-    dict_instruction_to_index['Rotate acw'] = 7
-    dict_instruction_to_index['Rotate cw'] = 8
-    dict_instruction_to_index['Keep going'] = 9
-    return dict_instruction_to_index[text_instruction]
-
-def execute_action(tello,action_index):
-    if action_index == 0:
-        pass
-    elif action_index == 1 or action_index == 2 or action_index == 3 or action_index == 4:
-        tello.move_forward(30)
-    elif action_index == 5:
-        tello.move_up(30)
-    elif action_index == 6:
-        tello.move_down(30)
-    elif action_index == 7:
-        tello.rotate_counter_clockwise(30)
-    elif action_index == 8:
-        tello.rotate_clockwise(30)
-    elif action_index == 9:
-        print('-----------------------------------')
-        print('Terminate')
-
-def action_index_to_text(action_index):
-    if action_index == 0:
-        return 'Stay'
-    elif action_index == 1 or action_index == 2 or action_index == 3 or action_index == 4:
-        return 'Go Forward'
-    elif action_index == 5:
-        return 'Go up'
-    elif action_index == 6:
-        return 'Go down'
-    elif action_index == 7:
-        return 'Rotate ACW'
-    elif action_index == 8:
-        return 'Rotate CW'
-    elif action_index == 9:
-        return 'Terminate'
 
 def check_user_input(tello,mode):
     key = cv2.waitKey(1) & 0xff
@@ -140,11 +107,31 @@ def check_user_input(tello,mode):
             mode = 'manual'
         return True,mode
 
+def execute_command(tello,command):
+    if command == "pos x":
+        tello.move_forward(22)
+    elif command == "neg x":
+        tello.move_forward(22)
+    elif command == "pos y":
+        tello.move_forward(22)
+    elif command == "neg y":
+        tello.move_forward(22)
+    elif command == "pos z":
+        tello.move_up(20)
+    elif command == "neg z":
+        tello.move_down(20)
+    elif command == "rot +":
+        tello.rotate_counter_clockwise(90)
+    elif command == "rot -":
+        tello.rotate_clockwise(90)
+
 def during_flight(tello,pose_model,action_predictor,exp_path):
     counter = 0
 
     keep_going = True
-    mode = 'manual'
+    scenario = 'scenario_01.txt'
+    mode = 'automatic'
+    step_number = 0
     while keep_going == True:
         while mode == 'automatic':
             if counter == 0:
@@ -164,6 +151,14 @@ def during_flight(tello,pose_model,action_predictor,exp_path):
 
             counter=counter+1
         
+
+        while mode == 'follow_scenario':
+            if(counter%1000 ==0):
+                follow_commands(tello,exp_path,counter)
+                step_number += 1           
+
+            counter=counter+1
+
         while mode == 'manual':
             print('in mode manual')
             img = tello.get_frame_read().frame
@@ -209,8 +204,7 @@ def automatic_flight(tello,pose_model,action_predictor,history_dict,target_pose,
     plot_action_predictions(history_dict,exp_path + '/action_predictions')
 
 
-
-def initialise_history_dict():
+def initialise_history_dict(config):
     history_dict = {}
     history_dict['statistics'] = {}
     history_dict['predicted_poses'] = []
@@ -220,31 +214,112 @@ def initialise_history_dict():
     history_dict['counter'] = 0
     history_dict['target_counter'] = 0
     history_dict['terminated'] = False
+    history_dict["probability_contributions"] = []
+    history_dict['global_probabilities'] = np.zeros(config["probability_grid"]["points_per_dim"])
     return history_dict
+
+
+def find_list_of_commands(start_pose,target_pose,G,converter):
+    
+    index_start = converter.pose_to_index(start_pose)
+    index_end = converter.pose_to_index(target_pose)
+    print(G.node[index_start])
+    print(G.node[index_end])
+    shortest_path = nx.shortest_path(G,index_start,index_end)
+
+    list_commands = []
+    for i in range(len(shortest_path)-1):
+        list_commands.append(G[shortest_path[i]][shortest_path[i+1]][0]['action'])
+    return list_commands
+
+def convert_objects(objects):
+        new_objects = {}
+        for key in objects:
+            old_dims = objects[key].numpy()
+            new_dimensions = np.zeros(6)
+            new_dimensions[:3] = old_dims[3:6] + 0.5 * old_dims[:3]
+            new_dimensions[3:6] =  0.5 * old_dims[:3]
+            new_objects[key] = new_dimensions
+        return new_objects
 
 def main():
 
-    # Bookkeeping 
+    # Bookkeeping
+    #Debug find current target
+    find_current_target
+
+
+
     dir_path = os.path.dirname(os.path.realpath(__file__))
     exp_path = '{}/../experiments/{}'.format(dir_path, datetime.now().strftime("time_%H_%M_%S_date_%d_%m_%Y"))
     make_directories(exp_path)
 
-    #Load models
-    pose_model,action_predictor = load_models(dir_path)
+    config = json.load(open(dir_path + '/config.json', 'r'))
 
-    # Initialise drone
+    # probs = np.zeros(config["probability_grid"]["points_per_dim"])
+    # probs[7,19,0] = 1.
+    # target = find_current_target(probs,config)
+    # print(target)
+    # print(a)
+    
+    objects = config[config["room"]]["objects"]
+
+
+    min_pos = torch.tensor([0.2,0.2,0.2,0.])
+    max_pos = torch.tensor([3.8,4.6,1.6,0.75])
+    steps = torch.tensor([0.2,0.2,0.2,0.25])
+    number_poses = 13984
+
+    objects_no_fly = objects_to_no_fly(objects)
+    converter = Converter(min_pos,max_pos,steps,number_poses,objects_no_fly)
+    G = nx.read_gpickle(os.path.dirname(os.path.realpath(__file__)) + '/../../graph_network/graphs/room_books_forward_solid_tables.gpickle')
+
+    #Define these
+    start_pose = torch.tensor([0.4,0.8,0.8,0])
+    
+    history_dict = initialise_history_dict(config)
+    
+    # Load dataset and lstm model
+    ft_model = fasttext.load_model(dir_path + '/../../testing_mdn/cc.en.300.bin')
+    #ft_model = None
+    mdn_model = MixtureDensityNetwork(300,3,4,ft_model,'normal')
+    mdn_model.load_state_dict(torch.load(dir_path + '/../networks/Fasttext_mdn/exp_06_fixed_bug_better_visuailsation_time_15_56_48_date_29_07_2020_epoch_61.pth',map_location=torch.device('cpu')))
+
+
+    # Find target position
+
     tello = Tello()
     tello.connect()
     tello.streamon()
-
-    #Take off
     tello.takeoff()
+    tello.rotate_counter_clockwise(1)
 
-    #Enter flight mode
-    with torch.no_grad():
-        during_flight(tello,pose_model,action_predictor,exp_path)
-        tello.end()
+    contribution_global_probabilities,text,anchor_object = update_target_probabilities_from_speech(exp_path,0,mdn_model,objects,config,tello)
+    history_dict['global_probabilities'] = history_dict['global_probabilities'] + contribution_global_probabilities
+    plot_global_probability(history_dict['global_probabilities'],exp_path,converter,config,0,'total')
+    predicted_target_pose = find_current_target(history_dict["global_probabilities"],config)
+    print('target_pose',predicted_target_pose)
+
+    list_commands = find_list_of_commands(start_pose,predicted_target_pose,G,converter)
+
+    print(list_commands)
+    for command in list_commands:
+        print(command)
+        execute_command(tello,command)
+
+
+
+
+    tello.rotate_counter_clockwise(30)
+    tello.rotate_clockwise(30)
+
+    tello.land()
+    tello.end()
+
+
+
 
 
 if __name__ == "__main__":
-    main()
+    with torch.no_grad():
+        main()
