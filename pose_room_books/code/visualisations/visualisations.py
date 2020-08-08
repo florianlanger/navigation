@@ -4,16 +4,20 @@ import numpy as np
 import pandas as pd
 import pickle
 
-def visualise_poses(batch_idx, epoch,images,outputs,targets,losses,L2_dist,angle_diff,config,exp_path,kind):
+def visualise_poses(batch_idx, epoch,images,outputs,targets,losses,L2_dist,angle_diff,config,exp_path,kind,image_names):
     if batch_idx == 0 and (epoch-1) % config["visualisations"]["interval"] == 0:
         dir_path = '{}/visualisations/poses/epoch_{}'.format(exp_path,epoch)
         if kind == 'train':
             os.mkdir(dir_path)
         images = images.cpu()
+        outputs[:,:3] = outputs[:,:3] *1000
+        outputs[:,3] = outputs[:,3] * 360
+        targets[:,:3] = targets[:,:3] *1000
+        targets[:,3] = targets[:,3] * 360
         for i in range(min(config["visualisations"]["number"],config["training"]["batch_size"])):
             path = dir_path + '/{}_{}.png'.format(kind,i)
-            text = 'Pose: {} \nPredicted: {}\nLoss: {:.4f}\n L2 dist: {:.4f}\nAngle Diff: {:.4f}°'.format(
-                str(targets[i].cpu().numpy().round(4)),str(outputs[i].cpu().numpy().round(4)),losses[i].item(),L2_dist[i].item(),angle_diff[i].item())
+            text = 'Pose: {} \nPredicted: {}\nLoss: {:.4f}\n L2 dist: {:.4f}\nAngle Diff: {:.4f}°\n{}'.format(
+                str(targets[i].cpu().numpy().round(4)),str(outputs[i].cpu().numpy().round(4)),losses[i].item(),L2_dist[i].item(),angle_diff[i].item(),image_names[i])
             visualise_image(images[i],path,text)
 
 def visualise_image(image,path,text=None):
