@@ -8,7 +8,7 @@ class Pose_Model(nn.Module):
         super(Pose_Model, self).__init__()
         self.fc1 = nn.Linear(encoding_dimensions, 128)
         self.fc2 = nn.Linear(128, 128)
-        self.fc3 = nn.Linear(128,7)
+        self.fc3 = nn.Linear(128,4)
         self.pretrained_model = pretrained_model
 
     def forward(self,x):

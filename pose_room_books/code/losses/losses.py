@@ -3,22 +3,22 @@ from scipy.spatial.transform import Rotation as R
 import numpy as np
 
 
-def pose_losses(outputs,targets):
+def L2_distances(outputs,targets):
     return torch.sqrt(torch.sum((outputs - targets)**2,dim=1))
 
-def L2_distances(outputs,targets):
-    return torch.sqrt(torch.sum((outputs[:,:3] - targets[:,:3])**2,dim=1))
-
 def angle_differences(outputs,targets):
-    angle_difference = torch.zeros(outputs.shape[0]).cuda()
-    for i in range(outputs.shape[0]):
-        r1 = R.from_quat(outputs[i,3:7].cpu().numpy().reshape(-1))
-        r2 = R.from_quat(targets[i,3:7].cpu().numpy().reshape(-1))
-        r3 = r2 * r1.inv()
-        angle_difference[i] = np.linalg.norm(r3.as_rotvec()) * 180 / np.pi
-    return angle_difference
+    abs_angle_diff = torch.abs(outputs-targets)%1.
+    abs_angle_diff[abs_angle_diff>0.5] = 1. - abs_angle_diff[abs_angle_diff>0.5]
+    return abs_angle_diff
+
+def pose_losses(outputs,targets):
+    position_loss = L2_distances(outputs[:,:3],targets[:,:3])
+    angle_diff = angle_differences(outputs[:,3],targets[:,3])
+    return position_loss + angle_diff
 
 
+
+#print(angle_differences(torch.tensor([1.1,0.5]),torch.tensor([0.2,0.7])))
 # outputs = torch.zeros((1,7))
 # targets = torch.zeros((1,7))
 

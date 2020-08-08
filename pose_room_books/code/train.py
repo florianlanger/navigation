@@ -12,7 +12,7 @@ from absl import app
 from tqdm import tqdm
 from datetime import datetime
 from torchvision.models import resnet18
-from torchvision.transforms import ColorJitter
+from torchvision.transforms import ColorJitter,RandomCrop,Compose,CenterCrop
 import torch.nn as nn
 
 from losses.losses import pose_losses,L2_distances,angle_differences
@@ -28,7 +28,7 @@ def one_epoch(network, config, data_loader, optimizer, epoch, exp_path,kind):
     elif kind == 'val':
         network.eval()
     total_loss,total_L2_dist,total_angle_diff = 0.,0.,0.
-    for batch_idx, (images,targets) in enumerate(data_loader):
+    for batch_idx, (images,targets,image_names) in enumerate(data_loader):
         optimizer.zero_grad()
         outputs = network(images)
         losses = pose_losses(outputs,targets)
@@ -38,7 +38,7 @@ def one_epoch(network, config, data_loader, optimizer, epoch, exp_path,kind):
             optimizer.step()
 
         with torch.no_grad():
-            L2_dist,angle_diff = L2_distances(outputs,targets),angle_differences(outputs,targets)
+            L2_dist,angle_diff = 1000*L2_distances(outputs[:,:3],targets[:,:3]),360*angle_differences(outputs[:,3],targets[:,3])
             total_loss += loss
             total_L2_dist += torch.mean(L2_dist)
             total_angle_diff += torch.mean(angle_diff)
@@ -47,7 +47,7 @@ def one_epoch(network, config, data_loader, optimizer, epoch, exp_path,kind):
                             epoch,kind,total_loss/((batch_idx +1)),total_L2_dist/((batch_idx +1)),total_angle_diff /((batch_idx +1)))
                 print(line, end="\r", flush=True)
                 
-            visualise_poses(batch_idx, epoch,images,outputs,targets,losses,L2_dist,angle_diff,config, exp_path, kind)
+            visualise_poses(batch_idx, epoch,images,outputs,targets,losses,L2_dist,angle_diff,config, exp_path, kind,image_names)
     print('\n')
     # This is only precise if have full number of batches per dataset
     total_loss /= (batch_idx + 1)
@@ -78,10 +78,12 @@ def main():
     create_directories(exp_path)
     # load dataset
     #transform = ColorJitter(0.5,0.5,0.5,0.1)
-    dataset = Pose_Dataset('/data/cvfs/fml35/own_datasets/localisation/dataset_01_room_books/sfm_rotation_translation_in_world_coordinates.json',
-    '/data/cvfs/fml35/own_datasets/localisation/dataset_01_room_books/center_cropped_images_small',config)#,transform=transform)
+    transform = Compose([CenterCrop((100,128)),RandomCrop((96,128))])
 
-    train_data,val_data = torch.utils.data.random_split(dataset,(275,50))
+    dataset = Pose_Dataset('/data/cvfs/fml35/own_datasets/localisation/new_room/crops/exp_02_date_08_08_20/data.json',
+    '/data/cvfs/fml35/own_datasets/localisation/new_room/crops/exp_02_date_08_08_20/cropped_images',config,max_number_images=18000,transform=transform)
+
+    train_data,val_data = torch.utils.data.random_split(dataset,(16000,2000))
     # initialise model and optimiser
     pretrained_model = resnet18(pretrained=True)
     pretrained_model.fc = nn.Sequential()
@@ -90,8 +92,8 @@ def main():
     
     optimizer = optim.Adam([{'params': network.parameters()}], lr=config["training"]["learning_rate"])
     
-    train_loader =  torch.utils.data.DataLoader(train_data, batch_size = config["training"]["batch_size"])
-    val_loader =  torch.utils.data.DataLoader(val_data, batch_size = config["training"]["batch_size"])
+    train_loader =  torch.utils.data.DataLoader(train_data, batch_size = config["training"]["batch_size"],shuffle=True)
+    val_loader =  torch.utils.data.DataLoader(val_data, batch_size = config["training"]["batch_size"],shuffle=True)
 
     epochs = range(1,config["training"]["n_epochs"]+1)
     for epoch in epochs:

@@ -1,0 +1,93 @@
+{
+    "name": "scenario_04",
+    "action_predictor_model":"exp_6_small_angles_hard_pairs_time_15_02_48_date_02_06_2020",
+    "pose_model":"exp_4_augmentation_time_19_16_49_date_01_06_2020/checkpoints/epoch_2201_model.pth",
+    "target_adjuster_model":"exp_4_diff_vector_time_08_50_18_date_08_06_2020",
+    "use_guidance":"True",
+    "frequency_guidance": 50,
+    "gpu": "6",
+    "max_moves": 100,
+    "number_tests": 1,
+    "no_fly": "True",
+    "scenario": 4,
+    "probability_grid":
+        {
+            "step_sizes": [0.2,0.2,0.2],
+            "min_position": [0.0,0.0,0.0],
+            "max_position": [4.0,4.0,2.0],
+            "points_per_dim": [20,20,10]
+        },
+
+    "room": "room_books", 
+
+
+    "my_room":
+        {   
+            "dimensions":
+                {
+                    "min": [0.0,0.0,0.0],
+                    "max": [4.20,3.65,2.0]
+                },
+            "objects":
+                {
+                    "big cupboard": {"dimensions":[0.31,3.03,1,0.31,0.61,1],"scaling":[1,0.5,0.8]},
+                    "side board": {"dimensions":[0.6,0.3,0.38,0.6,0.3,0.38],"scaling":[0.8,1,0.8]},
+                    "table": {"dimensions":[2.1,0.45,0.75,0.9,0.45,0.1],"scaling":[0.4,0.4,1.5]},
+                    "couch": {"dimensions":[3.16,3.22,0.35,0.78,0.44,0.35],"scaling":[0.6,0.7,0.5]},
+                    "stool": {"dimensions":[2.68,2.38,0.2,0.3,0.2,0.2],"scaling":[0.8,0.8,0.8]},
+                    "small cupboard": {"dimensions":[3.93,2.42,0.35,0.17,0.22,0.35],"scaling":[1,1,0.6]},
+                    "printer": {"dimensions":[3.65,1.5,0.2,0.25,0.25,0.2],"scaling":[0.8,0.8,0.8]},
+                    "lamp": {"dimensions":[2.4,0.42,1.1,0.12,0.42,0.35],"scaling":[1,0.7,1]}
+                },
+            "scenarios_commands":
+                {
+                    "1": ["behind the lamp on central height","over the back of the table slightly higher up"],
+                    "2": ["directly over the printer", "to the right of the small cupboard and higher up"],
+                    "3": ["in front of the couch but higher up","behind the big cupboard","to the left of the stool, closer to me"],
+                    "4": ["to the right of the stool on central height", "to the left of the table close to the back and slightly further down"],
+                    "5": ["directly underneath the table","behind the side board on central height"]
+                }
+
+        },
+    "room_books":
+        {   
+            "dimensions":
+                {
+                    "min": [0.0,0.0,0.0],
+                    "max": [4.00,4.85,1.80]
+                },
+            "objects":
+                {
+                    "printer": {"dimensions":[3.75,0.17,0.15,0.2,0.15,0.15],"scaling":[1,1,1]},
+                    "bench": {"dimensions":[1.06,2.18,0.23,0.24,0.72,0.23],"scaling":[0.8,0.65,0.7]},
+                    "big table": {"dimensions":[1.66,2.11,0.75,0.36,0.79,0.05],"scaling":[0.7,0.65,2.4]},
+                    "side table": {"dimensions":[1.86,3.25,0.70,0.48,0.32,0.05],"scaling":[0.7,0.7,2.4]},
+                    "arm chair": {"dimensions":[3.30,4.40,0.5,0.45,0.45,0.5],"scaling":[0.7,0.7,0.5]},
+                    "chess board table": {"dimensions":[3.56,2.81,0.19,0.19,0.19,0.19],"scaling":[0.8,1.1,0.9]},
+                    "shelf with the nespresso box": {"dimensions":[3.87,2.82,1.03,0.13,0.36,0.17],"scaling":[1,0.7,1]},
+                    "chair": {"dimensions":[2.10,2.35,0.51,0.3,0.35,0.51],"scaling":[1,1,1]},
+                    "couch": {"dimensions":[1.85,-0.9,0.39,1.37,0.75,0.39],"scaling":[0.5,0.6,1]},
+                    "computer screen": {"dimensions":[1.45,1.59,1.08,0.15,0.25,0.28],"scaling":[0.9,0.8,0.8]},
+                    "box with newspapers": {"dimensions":[1.20,3.25,0.14,0.22,0.22,0.14],"scaling":[0.8,0.8,0.8]}
+                },
+            "scenarios_commands":
+                {
+                    "1": ["to the right of the arm chair on central height", "to the left of the chess board table slightly higher up close to the front"],
+                    "2": ["directly underneath the center of the side table", "behind the bench on the left on central height", "behind the box with newspapers as high as the top"],
+                    "3": ["front of the shelf with the nespresso box in the center", "behind the chair on the left side as high as the top", "above the chess board table"],
+                    "4": ["directly above the printer","behind the couch on the left as high as the top"],
+                    "5": ["to the right of the computer screen on central height","to the right of the big table higher up"]
+                },
+            "scenarios_target_positions":
+                {
+                    "1": [3.30,3.6,0.5],
+                    "2": [1.86,3.25,0.4],
+                    "3": [3.40,2.82,1.03],
+                    "4": [3.75,0.17,0.7],
+                    "5": [1.45,1.1,1.08]
+                }
+
+
+        }
+}
+        

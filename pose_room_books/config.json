@@ -1,17 +1,17 @@
 {
-    "experiment_name": "exp_01",
+    "experiment_name": "exp_02_new_room_save",
     "gpu": "0",
     "training": 
         {
-            "n_epochs": 5000,
+            "n_epochs": 100,
             "batch_size": 25,
             "learning_rate": 0.0001,
             "log_interval": 50,
-            "save_interval": 100
+            "save_interval": 2
         },
     "visualisations":
         {
-            "interval": 50,
+            "interval": 5,
             "number": 5
         }
     }
