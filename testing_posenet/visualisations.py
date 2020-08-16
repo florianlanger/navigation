@@ -10,7 +10,8 @@ import cv2
 
 
 def one_view_trajectory(ax,history_dict,folder_path,converter):
-    
+
+
     for i in range(history_dict["target_counter"]):
         label = 'Target {}'.format(i)
         if i == history_dict["target_counter"]-1:
@@ -30,6 +31,7 @@ def one_view_trajectory(ax,history_dict,folder_path,converter):
                 dx, dy = - np.sin(2 * np.pi * x[i]), np.cos(2 * np.pi * y[i])
                 ax.quiver(x[i],y[i],z[i], dx, dy, 0, length=0.1, color=color,arrow_length_ratio=0.6)
 
+    
     ax.legend()
 
     ax.set_xlabel('x')
@@ -45,6 +47,7 @@ def one_view_trajectory(ax,history_dict,folder_path,converter):
 
     return ax
 
+   
 def plot_trajectory(history_dict,folder_path,converter):
     fig = plt.figure(figsize=plt.figaspect(0.3))
     ax1 = fig.add_subplot(1,3,1, projection='3d')
@@ -80,3 +83,27 @@ def plot_no_fly(ax,corners_no_fly_zone,color=(0,0,1,0.1)):
 
     return ax
 
+def visualise_poses(history_dict,test_folder):
+    if history_dict['last_counter'] == 0:
+        lower_limit = 0
+    else:
+        lower_limit = history_dict['last_counter']+1
+    for i in range(lower_limit,history_dict["counter"]+1):
+        # BLENDER
+        image = Image.open(test_folder +'/images/' + history_dict['image_names'][i])
+        #image = Image.open('/Users/legend98/Google Drive/MPhil project/navigation/testing/tests/test_03_time_17_34_15_date_14_07_2020/images/render_-1_x_-0.6207_y_0.9451_z_1.4787_rz_0.2334.png')
+        image = F.to_tensor(image)[:3,:,:]
+        path = test_folder + '/poses/pose_{}.png'.format(str(i+1).zfill(2))
+        text = 'Pose: {} \nPredicted: {}'.format(
+            str(history_dict['true_poses'][i]),str(history_dict['predicted_poses'][i]))
+        visualise_image(image,path,text)
+
+def visualise_image(image,path,text=None):
+    fig = plt.figure()
+    fig.add_subplot(1,2,1)
+    image = image.numpy()
+    plt.imshow(np.moveaxis(np.clip(image,0,1), 0, -1))
+    if text is not None:
+        plt.figtext(0.75, 0.5, text, wrap=True, horizontalalignment='center', fontsize=12)
+    fig.savefig(path)
+    plt.close(fig)

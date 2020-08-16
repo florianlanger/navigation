@@ -6,15 +6,19 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 class Fasttext_model(nn.Module):
 
-    def __init__(self, embedding_dim,ft_model):
+    def __init__(self, embedding_dim,ft_model,cross_entropy=False):
         super(Fasttext_model, self).__init__()
         self.embedding_dim = embedding_dim
+        self.cross_entropy = cross_entropy
 
         #ft_model = fasttext.util.reduce_model(ft, embedding_dim)
 
         self.ft_model = ft_model
 
-        self.fc1 = nn.Linear(embedding_dim, 2*9*9*9)
+        if self.cross_entropy == "False":
+            self.fc1 = nn.Linear(embedding_dim, 2*9*9*9)
+        elif self.cross_entropy == "True":
+            self.fc1 = nn.Linear(embedding_dim, 9*9*9)
 
     def forward(self,descriptions):
         embeddings = torch.zeros(len(descriptions),300).cuda()

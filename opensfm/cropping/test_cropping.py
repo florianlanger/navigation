@@ -20,7 +20,6 @@ plane_w = (2*plane_f)*np.tan(HFoV/2.0)
 plane_h = (2*plane_f)*np.tan(VFoV/2.0)
 
 #transform into camera coordinates
-#TODO: not sure which way round
 pixel_w = masked_colors.shape[1]
 pixel_h = masked_colors.shape[0]
 

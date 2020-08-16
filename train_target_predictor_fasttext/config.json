@@ -1,6 +1,6 @@
 {
-    "experiment_name": "exp_01",
-    "gpu": "1",
+    "experiment_name": "exp_03_proper_split_cross_entropy",
+    "gpu": "0",
     "training": 
         {
             "n_epochs": 1000,
@@ -19,6 +19,7 @@
         },
     "model":
         {
-            "embedding_dim": 300
+            "embedding_dim": 300,
+            "cross_entropy": "True"
         }
     }

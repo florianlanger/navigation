@@ -1,5 +1,5 @@
 {
-    "experiment_name": "exp_7_discrete_angles",
+    "experiment_name": "exp_13_hard_pairs",
     "gpu": "6",
     "training": 
         {
@@ -8,7 +8,7 @@
             "learning_rate": 0.001,
             "pairs_per_epoch": 10000,
             "log_interval": 50,
-            "save_interval": 100
+            "save_interval": 5
         },
 
     "graph":
@@ -18,12 +18,12 @@
         },
     "sampler":
         {
-            "ratio_hard_pairs": 0.0,
+            "ratio_hard_pairs": 0.5,
             "ratio_terminate_pairs": 0.1
         },
     "visualisations":
         {
-            "interval": 10,
+            "interval": 5,
             "random_pairs": 5,
             "hard_pairs": 10
         },

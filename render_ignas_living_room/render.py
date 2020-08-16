@@ -23,12 +23,12 @@ def write_render_to_csv(path,render_name,x,y,z,rz):
 def main(path):
     rx = 90.
     ry = 0
-    for number,kind in zip([30,5],['train','val']):
+    for number,kind in zip([5000,50000],['val','train']):
         dir_path = path + '/' + kind
         for counter in range(number):
-            x = np.round(np.random.uniform(-1.30,2.30),3)
-            y = np.round(np.random.uniform(-0.5,1.5),3)
-            z = np.round(np.random.uniform(0.2,1.8),3)
+            x = np.round(np.random.uniform(-1.90,3.1),3)
+            y = np.round(np.random.uniform(-1.,2.25),3)
+            z = np.round(np.random.uniform(0.,2.2),3)
             rz = np.round(np.random.uniform(0.0,360.),3)
             render_name = 'render_{}_x_{}_y_{}_z_{}_rz_{}.png'.format(counter,x,y,z,rz)
             write_render_to_csv(dir_path,render_name,x,y,z,rz)
@@ -40,23 +40,23 @@ def main(path):
 if __name__ == "__main__":
 
 
-    full_path = '/data/cvfs/fml35/own_datasets/grid_world/ignas_living_room_random_poses'
-    os.mkdir(full_path)
-    os.mkdir(full_path + '/train')
-    os.mkdir(full_path + '/val')
-    os.mkdir(full_path + '/train/images')
-    os.mkdir(full_path + '/val/images')
 
     bpy.context.scene.render.engine = 'CYCLES'
+    bpy.context.scene.cycles.device = 'CPU'
     bpy.context.scene.cycles.max_bounces = 12
     bpy.context.scene.cycles.diffuse_bounces = 1
     bpy.context.scene.cycles.glossy_bounces = 1
     bpy.context.scene.cycles.transparent_max_bounces = 1
     bpy.context.scene.cycles.transmission_bounces = 1
-    bpy.context.scene.cycles.device = 'CPU'
     bpy.context.scene.render.tile_x = 10
     bpy.context.scene.render.tile_y = 10
-    bpy.context.scene.cycles.samples = 128
+    bpy.context.scene.cycles.samples = 64
+    full_path = '/data/cvfs/fml35/own_datasets/grid_world/ignas_living_room_big'
+    os.mkdir(full_path)
+    os.mkdir(full_path + '/train')
+    os.mkdir(full_path + '/val')
+    os.mkdir(full_path + '/train/images')
+    os.mkdir(full_path + '/val/images')
 
 
 
@@ -75,4 +75,4 @@ if __name__ == "__main__":
    
     
     
-    #main(full_path)
+    main(full_path)

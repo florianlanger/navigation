@@ -234,7 +234,7 @@ if __name__ == "__main__":
          'W_res': 512,
          'plane_f':0.05,
          'HFoV':(55 / 360) * 2* np.pi,
-         'VFoV': (45 / 360) *np.pi * 2,
+         'VFoV': (55 / 360) *np.pi * 2,
          'angles': [0,np.pi/2,0] #[x,y,z] # vary just rotation of z, z = 0 corresponnds to center crop, increasing z will shift crop to the right
         }
     all_masks = {}
@@ -242,13 +242,13 @@ if __name__ == "__main__":
     fname='facing_bookshelf_part2_frame_00100.png'
     img = cv2.imread(fname)
     for z in tqdm(range(-180,180)): 
-        params['R'] = euler_to_mat(z=z * np.pi / 180,y=params['angles'][1],x=params['angles'][0])
-        result,mask,mask_as_start_and_end_indices=equirectangular_crop(img,params)
+        params['R'] = euler_to_mat(z=z/180*np.pi,y=params['angles'][1],x=params['angles'][0])
+        result,mask,mask_as_start_and_end_indices = equirectangular_crop(img,params)
         all_masks[z] = mask_as_start_and_end_indices
         #assert( np.sum(np.abs(result-result_slow))<0.00001)
         #cv2.imwrite('./own_test/'+fname.split('.')[0]+'_params_'+str(params['angles']) + '.png',result)
         #cv2.imwrite('./own_test/masked_image_' + str(params['angles']) + '.png',mask * img)
-    #np.savez('mask.npz',mask_as_start_and_end_indices=mask_as_start_and_end_indices)
+    np.savez('mask.npz',mask_as_start_and_end_indices=mask_as_start_and_end_indices)
     with open('../../pose_room_books/mask_dict.pkl',"wb") as file:
-        pickle.dump(all_masks,file)
+         pickle.dump(all_masks,file)
 

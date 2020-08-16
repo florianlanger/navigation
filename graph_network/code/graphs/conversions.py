@@ -49,8 +49,8 @@ class Converter(object):
         if pose.shape[0] == 3:
             return True
         elif pose.shape[0] == 4:
-            in_no_fly_1 = (torch.all(pose[:3] >= self.corners_no_fly_zone[0,0] + 0.1) and torch.all(pose[:3] - 0.0001<= self.corners_no_fly_zone[0,1]))
-            in_no_fly_2 = (torch.all(pose[:3] + 0.0001 >= self.corners_no_fly_zone[1,0] + 0.1) and torch.all(pose[:3] - 0.0001<= self.corners_no_fly_zone[1,1] - 0.1))
+            in_no_fly_1 = (torch.all(pose[:3] + 0.0001 >= self.corners_no_fly_zone[0,0]+ 0.1) and torch.all(pose[:3] - 0.0001<= self.corners_no_fly_zone[0,1] - 0.1))
+            in_no_fly_2 = (torch.all(pose[:3] + 0.0001 >= self.corners_no_fly_zone[1,0]+ 0.1) and torch.all(pose[:3] - 0.0001<= self.corners_no_fly_zone[1,1] - 0.1))
             in_no_fly_3 = (torch.all(pose[:3] + 0.0001 >= self.corners_no_fly_zone[2,0]+ 0.1) and torch.all(pose[:3] - 0.0001<= self.corners_no_fly_zone[2,1] - 0.1))
             in_no_fly_4 = (torch.all(pose[:3] + 0.0001 >= self.corners_no_fly_zone[3,0]+ 0.1) and torch.all(pose[:3] - 0.0001<= self.corners_no_fly_zone[3,1] - 0.1))
             in_no_fly_5 = (torch.all(pose[:3] + 0.0001 >= self.corners_no_fly_zone[4,0]+ 0.1) and torch.all(pose[:3] - 0.0001<= self.corners_no_fly_zone[4,1] - 0.1))
@@ -59,8 +59,7 @@ class Converter(object):
             in_no_fly_8 = (torch.all(pose[:3] + 0.0001 >= self.corners_no_fly_zone[7,0]+ 0.1) and torch.all(pose[:3] - 0.0001<= self.corners_no_fly_zone[7,1] - 0.1))
             in_no_fly_9 = (torch.all(pose[:3] + 0.0001 >= self.corners_no_fly_zone[8,0]+ 0.1) and torch.all(pose[:3] - 0.0001<= self.corners_no_fly_zone[8,1] - 0.1))
             in_no_fly_10 = (torch.all(pose[:3] + 0.0001 >= self.corners_no_fly_zone[9,0]+ 0.1) and torch.all(pose[:3] - 0.0001<= self.corners_no_fly_zone[9,1] - 0.1))
-            in_no_fly_11 = (torch.all(pose[:3] + 0.0001 >= self.corners_no_fly_zone[10,0]+ 0.1) and torch.all(pose[:3] - 0.0001<= self.corners_no_fly_zone[10,1] - 0.1))
-            if (in_no_fly_1 or in_no_fly_2 or in_no_fly_3 or in_no_fly_4 or in_no_fly_5 or in_no_fly_6 or in_no_fly_7 or in_no_fly_8 or in_no_fly_9 or in_no_fly_10 or in_no_fly_11):
+            if (in_no_fly_1 or in_no_fly_2 or in_no_fly_3 or in_no_fly_4 or in_no_fly_5 or in_no_fly_6 or in_no_fly_7 or in_no_fly_8 or in_no_fly_9 or in_no_fly_10):
                 return False
             else:
                 return True

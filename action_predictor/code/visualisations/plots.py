@@ -203,22 +203,55 @@ def plot_position_and_target(ax,position,config):
     ax.scatter(x_s,y_s,z_s,label='Position',color='orange')
     ax.plot([x_s,x_s],[y_s,y_s],[0.1,z_s],'--',color='orange')
     # curent position
-    dx_s, dy_s = - np.sin(2 * np.pi * position[3]), np.cos(2 * np.pi * position[3])
+    dx_s, dy_s = np.cos(2 * np.pi * position[3]), np.sin(2 * np.pi * position[3])
     ax.quiver(x_s,y_s,z_s, dx_s, dy_s, 0, length=0.4, color="orange",arrow_length_ratio=0.6)
     # target
-    dx_t, dy_t = - np.sin(2 * np.pi * position[7]), np.cos(2 * np.pi * position[7])
+    dx_t, dy_t = np.cos(2 * np.pi * position[7]), np.sin(2 * np.pi * position[7])
     ax.quiver(x_t,y_t,z_t, dx_t, dy_t, 0, length=0.4, color="green",arrow_length_ratio=0.6)
     ax.legend()
 
     ax.set_xlabel('x - windows')
     ax.set_ylabel('y - kitchen')
     ax.set_zlabel('z')
-    ax.set_xlim(-1.3,1.8)
-    ax.set_ylim(-0.5,1.4)
-    ax.set_zlim(0.2,1.7)
-    if config["graph"]["no_fly"]:
-        ax = plot_no_fly(ax,np.array([[0.5,-0.5,0.2],[1.7,1.1,0.9]]))
-        ax = plot_no_fly(ax,np.array([[-1.3,0.5,0.2],[-0.1,1.4,1.1]]))
+    ax.set_xlim(-1.9,3.1)
+    ax.set_ylim(-1.,2.2)
+    ax.set_zlim(0.0,2.4)
+
+
+
+    corners_no_fly_zone = torch.tensor([[[-1.3000,  0.5000,  0.0000],
+         [-0.1000,  1.7000,  0.9200]],
+
+        [[-2.0500, -0.2800,  1.3900],
+         [-1.7700,  1.6200,  2.0900]],
+
+        [[-2.0630,  1.7200,  0.0000],
+         [-1.3170,  2.2000,  0.9200]],
+
+        [[-0.9000,  0.5400,  2.1900],
+         [-0.6000,  0.8000,  2.5900]],
+
+        [[-1.5400, -0.2800,  0.0200],
+         [-2.0200,  1.6200,  0.8200]],
+
+        [[ 0.5500, -0.5000,  0.1000],
+         [ 1.6500,  1.1000,  0.9000]],
+
+        [[-1.2200, -0.5200, -0.0100],
+         [-0.5200,  0.1200,  0.4100]],
+
+        [[ 2.1200,  0.1900, -0.0200],
+         [ 3.1600,  1.1700,  0.7400]],
+
+        [[-1.0200,  2.1600,  0.0000],
+         [-0.0200,  2.3000,  0.8000]],
+
+         [[ 1.9600,  2.5700,  0.6600],
+         [ 2.3600,  2.9500,  0.9600]]])
+
+    for no_fly_zone in corners_no_fly_zone:
+        ax = plot_no_fly(ax,no_fly_zone.numpy())
+
     return ax
 
 

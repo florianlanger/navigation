@@ -12,14 +12,14 @@ from absl import app
 from tqdm import tqdm
 from datetime import datetime
 from torchvision.models import resnet18
-from torchvision.transforms import ColorJitter,RandomCrop,Compose,CenterCrop
+from torchvision.transforms import ColorJitter,RandomCrop,Compose,CenterCrop,RandomResizedCrop
 import torch.nn as nn
 
 from losses.losses import pose_losses,L2_distances,angle_differences
 from models.model import Pose_Model
 from data.dataset import Pose_Dataset
 from utilities import load_config, create_directories, write_to_file
-from visualisations.visualisations import visualise_poses, plot_history
+from visualisations.visualisations import visualise_poses, plot_history, visualise_callbacks
 
 
 def one_epoch(network, config, data_loader, optimizer, epoch, exp_path,kind):
@@ -27,6 +27,7 @@ def one_epoch(network, config, data_loader, optimizer, epoch, exp_path,kind):
         network.train()
     elif kind == 'val':
         network.eval()
+
     total_loss,total_L2_dist,total_angle_diff = 0.,0.,0.
     for batch_idx, (images,targets,image_names) in enumerate(data_loader):
         optimizer.zero_grad()
@@ -38,7 +39,7 @@ def one_epoch(network, config, data_loader, optimizer, epoch, exp_path,kind):
             optimizer.step()
 
         with torch.no_grad():
-            L2_dist,angle_diff = 1000*L2_distances(outputs[:,:3],targets[:,:3]),360*angle_differences(outputs[:,3],targets[:,3])
+            L2_dist,angle_diff = 0.00217*1000*L2_distances(outputs[:,:3],targets[:,:3]),360*angle_differences(outputs[:,3],targets[:,3])
             total_loss += loss
             total_L2_dist += torch.mean(L2_dist)
             total_angle_diff += torch.mean(angle_diff)
@@ -67,6 +68,9 @@ def one_epoch(network, config, data_loader, optimizer, epoch, exp_path,kind):
     if kind == 'val':
         write_to_file(exp_path + '/history.csv',",{},{},{}\n".format(total_loss,total_L2_dist,total_angle_diff))
 
+        if (epoch-1) % config["visualisations"]["callback_interval"] == 0:
+            visualise_callbacks(network,exp_path,epoch)
+
 def main():
     # get absolute path to current file
     dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -78,7 +82,8 @@ def main():
     create_directories(exp_path)
     # load dataset
     #transform = ColorJitter(0.5,0.5,0.5,0.1)
-    transform = Compose([CenterCrop((100,128)),RandomCrop((96,128))])
+    transform = Compose([CenterCrop((100,128)),RandomCrop((96,128)),ColorJitter(0.15,0.15,0.15,0.02)])
+    #transform = Compose([CenterCrop((96,128)),RandomResizedCrop((96,128),scale=(0.9,1.0),ratio=(0.9999,1.000000)),ColorJitter(0.15,0.15,0.15,0.02)])
 
     dataset = Pose_Dataset('/data/cvfs/fml35/own_datasets/localisation/new_room/crops/exp_02_date_08_08_20/data.json',
     '/data/cvfs/fml35/own_datasets/localisation/new_room/crops/exp_02_date_08_08_20/cropped_images',config,max_number_images=18000,transform=transform)

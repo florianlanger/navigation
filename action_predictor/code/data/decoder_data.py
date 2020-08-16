@@ -21,14 +21,14 @@ class Decoder_Dataset(data.Dataset):
       def __getitem__(self, indices=None):
 
             assert (indices.shape[0] == 2 and indices.dtype == torch.int64), "indices or shape or dtype is wrong"
-            pose_1 = self.perturb_pose(self.graph.nodes[indices[0].item()]['pose'])
-            pose_2 = self.perturb_pose(self.graph.nodes[indices[1].item()]['pose'])
-            poses = torch.cat((pose_1,pose_2)).cuda()
+            pose_1 = self.perturb_pose(self.graph.nodes[indices[0].item()]['pose'].cuda())
+            pose_2 = self.perturb_pose(self.graph.nodes[indices[1].item()]['pose'].cuda())
+            poses = torch.cat((pose_1,pose_2))
             target_distribution = self.calc_target_distribution(indices)
             return poses, indices, target_distribution
 
       def perturb_pose(self,pose):
-            perturbation = torch.cat((0.1*torch.rand((3,)) - 0.05,torch.zeros((1,)))).cuda()
+            perturbation = torch.cat((0.2*torch.rand((3,)) - 0.1,torch.zeros((1,)))).cuda()
             perturbed_pose = pose + perturbation
             return perturbed_pose
 

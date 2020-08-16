@@ -1,0 +1,21 @@
+{
+    "experiment_name": "exp_01",
+    "gpu": "0",
+    "training": 
+        {
+            "n_epochs": 1000,
+            "learning_rate": 0.002,
+            "save_interval": 20,
+            "batch_size": 5
+        },
+    "visualisations":
+        {
+            "interval": 5,
+            "number": 5
+        },
+    "model":
+        {
+            "embedding_dim": 5,
+            "number_modes": 4
+        }
+    }

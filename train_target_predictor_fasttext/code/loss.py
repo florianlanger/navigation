@@ -1,7 +1,7 @@
 import torch
 
 def calc_loss_single_node(output,target):
-    return - torch.mean(10 * target * torch.log(output) + (1-target)* torch.log(1-output))
+    return - torch.mean(target * torch.log(output))
 
 
 def calc_loss_two_nodes(output,target):

@@ -22,6 +22,7 @@ def create_directories(exp_path):
     os.mkdir(exp_path + '/visualisations')
     os.mkdir(exp_path + '/visualisations/poses')
     os.mkdir(exp_path + '/visualisations/history')
+    os.mkdir(exp_path + '/visualisations/callbacks')
     os.mkdir(exp_path + '/checkpoints')
     shutil.copy(exp_path +'/../../config.json',exp_path +'/config.json')
     shutil.copytree(exp_path +'/../../code',exp_path +'/code')

@@ -29,12 +29,21 @@ def train(model,optimizer,data_loader,config,epoch,exp_path,kind):
         model.zero_grad()
         output = model(descriptions)
 
-        softmax = nn.Softmax(dim=2)
-        output = softmax(output.reshape((-1,9*9*9,2)))
-
-        target = convert_pose_to_one_hot(cube_dimensions,target_poses)
-        loss = calc_loss_two_nodes(output, target)
-        #loss = calc_loss_single_node(output, target)
+        if model.cross_entropy == "False":
+            softmax = nn.Softmax(dim=2)
+            output = softmax(output.reshape((-1,9*9*9,2)))
+            target = convert_pose_to_one_hot(cube_dimensions,target_poses)
+            loss = calc_loss_two_nodes(output, target)
+            output_for_visualisation = output[:,:,0].detach().cpu()
+            #loss = calc_loss_single_node(output, target)
+        
+        if model.cross_entropy == "True":
+            softmax = nn.Softmax(dim=1)
+            output = softmax(output.reshape((-1,9*9*9)))
+            target = convert_pose_to_one_hot(cube_dimensions,target_poses)
+            loss = calc_loss_single_node(output, target)
+            output_for_visualisation = output.detach().cpu()
+            #loss = calc_loss_single_node(output, target)
         
         if kind =='train':
             loss.backward()
@@ -42,16 +51,15 @@ def train(model,optimizer,data_loader,config,epoch,exp_path,kind):
 
         with torch.no_grad():
             total_loss += loss.item()
-            total_correct += calc_correct(output[:,:,0],target)
 
             if (epoch -1) % config["visualisations"]["interval"] ==0:
                 if kind =='train':
                     if i == 0:
-                        visualise(output[:,:,0].detach().cpu(),target.detach().cpu(),np.array(cube_dimensions.detach().cpu()),descriptions,'{}/visualisations/predictions/train/epoch_{}'.format(exp_path,epoch),config)
+                        visualise(output_for_visualisation,target.detach().cpu(),np.array(cube_dimensions.detach().cpu()),descriptions,'{}/visualisations/predictions/train/epoch_{}'.format(exp_path,epoch),config)
 
                 if kind =='val':
                     if i == 0:
-                        visualise(output[:,:,0].detach().cpu(),target.detach().cpu(),np.array(cube_dimensions.detach().cpu()),descriptions,'{}/visualisations/predictions/val/epoch_{}'.format(exp_path,epoch),config)
+                        visualise(output_for_visualisation,target.detach().cpu(),np.array(cube_dimensions.detach().cpu()),descriptions,'{}/visualisations/predictions/val/epoch_{}'.format(exp_path,epoch),config)
 
     average_loss = total_loss/(i+1)
     accuracy = total_correct/(float(i+1)*cube_dimensions.shape[0])
@@ -74,11 +82,9 @@ def train(model,optimizer,data_loader,config,epoch,exp_path,kind):
 
 def main():
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    print('Lets go')
     # load config
     with open('{}/../config.json'.format(dir_path), 'r') as file:
         config = json.load(file)
-    print('after config')
 
     os.environ["CUDA_VISIBLE_DEVICES"] = config["gpu"]
     exp_path = '{}/../experiments/{}_{}'.format(dir_path,config["experiment_name"], datetime.now().strftime("time_%H_%M_%S_date_%d_%m_%Y"))
@@ -86,16 +92,17 @@ def main():
 
     create_directories(exp_path)
     print('before data')
-    dataset = Target_Predictor_Dataset('/scratches/robot_2/fml35/mphil_project/navigation/target_pose/training_data1/data_transcribed_new.csv',250)
-    train_data,val_data = torch.utils.data.random_split(dataset,(200,50))
+    train_data = Target_Predictor_Dataset('/scratches/robot_2/fml35/mphil_project/navigation/target_pose/training_data1/data_transcribed_new_training.csv',200)
+    val_data = Target_Predictor_Dataset('/scratches/robot_2/fml35/mphil_project/navigation/target_pose/training_data1/data_transcribed_new_validation.csv',50)
+    #train_data,val_data = torch.utils.data.random_split(dataset,(200,50))
     train_loader = data.DataLoader(train_data, batch_size = config["training"]["batch_size"], shuffle=True)
-    val_loader = data.DataLoader(val_data, batch_size = config["training"]["batch_size"],shuffle=True)
+    val_loader = data.DataLoader(val_data, batch_size = config["training"]["batch_size"],shuffle=False)
        
     # load model and optimiser
     print('loading fasttext model')
     ft_model = fasttext.load_model('/data/cvfs/fml35/original_downloads/Fasttext/cc.en.300.bin')
     print('finished loading fasttext model')
-    model = Fasttext_model(config["model"]["embedding_dim"],ft_model)
+    model = Fasttext_model(config["model"]["embedding_dim"],ft_model,config["model"]["cross_entropy"])
 
     model.cuda()
     optimizer = optim.Adam(model.parameters(), lr=config["training"]["learning_rate"])

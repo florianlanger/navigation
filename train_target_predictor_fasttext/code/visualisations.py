@@ -10,7 +10,6 @@ import pickle
 #color=viridis(output[i].item())
 def one_view_probabilities(ax,output,target,cube,text=None):
 
-
     list_high_prob_indices = []
     output = output.numpy()
     #visualise predictions
@@ -18,7 +17,8 @@ def one_view_probabilities(ax,output,target,cube,text=None):
     for i in range(len(output)):
         index_1, index_2, index_3 = i // 81,  (i % 81)  // 9, i % 9
         indices = np.array([index_1,index_2,index_3])
-        position = cube[:3] + (indices - 4) * cube[3:6]/2
+        #position = cube[:3] + (indices - 4) * cube[3:6]/2
+        position = np.array([0.,0.,0.]) + (indices - 4) *  np.array([1.,1.,1.]) /2
         positions[i] = position
         if output[i] > 0.9:
             list_high_prob_indices.append(i)
@@ -33,12 +33,10 @@ def one_view_probabilities(ax,output,target,cube,text=None):
         if target[i] == 1:
             index_1, index_2, index_3 = i // 81,  (i % 81)  // 9, i % 9
             indices = np.array([index_1, index_2, index_3])
-            position = cube[:3] + (indices - 4) * cube[3:6]/2 + np.array([0.05,0.05,0.05])
+            #position = cube[:3] + (indices - 4) * cube[3:6]/2 + np.array([0.05,0.05,0.05])
+            position = np.array([0.,0.,0.]) + (indices - 4) *  np.array([1.,1.,1.]) /2 + np.array([0.05,0.05,0.05])
             ax.scatter(position[0],position[1],position[2],color='red')    
 
-    # visualise camera
-    ax.scatter(0,0,1.5,color='black')
-    ax.plot([0,0],[0,0],[0,1.5],'--',color='black')
 
     if text:
         plt.figtext(0.3, 0.9, text, wrap=True, horizontalalignment='center', fontsize=12)
@@ -48,12 +46,12 @@ def one_view_probabilities(ax,output,target,cube,text=None):
     ax.set_ylabel('y')
     ax.set_zlabel('z')
 
-    ax.set_xlim(0,cube[0] + 2*cube[3])
-    ax.set_ylim(cube[1] - 2*cube[4],cube[1] + 2*cube[4])
-    ax.set_zlim(0,cube[2] + 2*cube[5])
+    ax.set_xlim(-2,2)
+    ax.set_ylim(-2,2)
+    ax.set_zlim(-2,2)
 
     # add cube 
-    ax = plot_no_fly(ax,np.stack([cube[:3] - cube[3:6]/2,cube[:3] + cube[3:6]/2]))
+    ax = plot_no_fly(ax,np.stack([np.array([-0.5,-0.5,-0.5]),np.array([0.5,0.5,0.5])]))
 
     return ax, p
     
