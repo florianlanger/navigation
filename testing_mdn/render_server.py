@@ -36,14 +36,24 @@ def render_pose(pose,path,render_name):
 
 def main():
 
-    # define scene parameters
-    bpy.context.scene.render.engine = 'BLENDER_EEVEE'
-    bpy.context.scene.eevee.taa_render_samples = 1
+    bpy.context.scene.render.engine = 'CYCLES'
+    bpy.context.scene.cycles.device = 'CPU'
+    bpy.context.scene.cycles.max_bounces = 12
+    bpy.context.scene.cycles.diffuse_bounces = 1
+    bpy.context.scene.cycles.glossy_bounces = 1
+    bpy.context.scene.cycles.transparent_max_bounces = 1
+    bpy.context.scene.cycles.transmission_bounces = 1
+    bpy.context.scene.render.tile_x = 10
+    bpy.context.scene.render.tile_y = 10
+    bpy.context.scene.cycles.samples = 64
+    # # define scene parameters
+    # bpy.context.scene.render.engine = 'BLENDER_EEVEE'
+    # bpy.context.scene.eevee.taa_render_samples = 1
 
 
-    print(bpy.context.scene.render.engine)
+    # print(bpy.context.scene.render.engine)
 
-    #set global parameter for blender
+    # #set global parameter for blender
     scene = bpy.data.scenes["Scene"]
     scene.render.resolution_x = 100
     scene.render.resolution_y = 100

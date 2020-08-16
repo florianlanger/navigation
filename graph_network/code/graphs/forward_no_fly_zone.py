@@ -28,7 +28,9 @@ def add_edges(G, move_actions_dict, total_number_non_terminate_nodes,always_vali
             G.node[i]['flyable'] = True
             G.node[i + total_number_non_terminate_nodes]['flyable'] = True
             forward_action = []
-            if (pose[3] / 0.25) % 1. < 0.00001:
+            print(pose)
+            print((pose[3] / 0.25) % 1.)
+            if (pose[3] / 0.25) % 1. < 0.0001:
                 forward_action.append(orientation_to_forward_action[int(pose[3]*4)])
             for test_action in always_valid_actions + forward_action:
                 adj_pos = pose + move_actions_dict[test_action]['change']
@@ -44,9 +46,9 @@ def add_edges(G, move_actions_dict, total_number_non_terminate_nodes,always_vali
 
 def create_network(move_actions_dict,always_valid_actions,orientation_to_forward_action,converter):
     G = nx.MultiDiGraph()
-    add_nodes(G,13984,converter)
-    add_edges(G,move_actions_dict,13984,always_valid_actions,orientation_to_forward_action,converter)
-    nx.write_gpickle(G,os.path.dirname(os.path.realpath(__file__)) + '/../../graphs/room_books_forward_hollow_table.gpickle') 
+    add_nodes(G, 8 * 4,converter)
+    add_edges(G,move_actions_dict,8 * 4,always_valid_actions,orientation_to_forward_action,converter)
+    nx.write_gpickle(G,os.path.dirname(os.path.realpath(__file__)) + '/../../graphs/test.gpickle') 
 
 
 if __name__ == "__main__":
@@ -55,37 +57,34 @@ if __name__ == "__main__":
     always_valid_actions = [0,5,6,7,8]
 
     move_actions_dict = {0:{'name':'stay','change':torch.tensor([0.,0.,0.,0.])},
-                    1:{'name':'pos x','change':torch.tensor([0.2,0.,0.,0.])},
-                    2:{'name':'neg x','change':torch.tensor([-0.2,0,0,0.])},
-                    3:{'name':'pos y','change':torch.tensor([0,0.2,0,0.])},
-                    4:{'name':'neg y','change':torch.tensor([0.,-0.2,0,0.])},
-                    5:{'name':'pos z','change':torch.tensor([0,0,0.2,0.])},
-                    6:{'name':'neg z','change':torch.tensor([0,0,-0.2,0.])},
-                    7:{'name':'rot +','change':torch.tensor([0,0,0.,0.25])},
-                    8:{'name':'rot -','change':torch.tensor([0,0,0.,-0.25])}
+                    1:{'name':'pos x','change':torch.tensor([0.1,0.,0.,0.])},
+                    2:{'name':'neg x','change':torch.tensor([-0.1,0,0,0.])},
+                    3:{'name':'pos y','change':torch.tensor([0,0.1,0,0.])},
+                    4:{'name':'neg y','change':torch.tensor([0.,-0.1,0,0.])},
+                    5:{'name':'pos z','change':torch.tensor([0,0,0.1,0.])},
+                    6:{'name':'neg z','change':torch.tensor([0,0,-0.1,0.])},
+                    7:{'name':'rot +','change':torch.tensor([0,0,0.,0.0833333])},
+                    8:{'name':'rot -','change':torch.tensor([0,0,0.,-0.0833333])}
                         }
 
     orientation_to_forward_action = {0:1,1:3,2:2,3:4}
 
 
-    min_pos = torch.tensor([0.2,0.2,0.2,0.])
-    max_pos = torch.tensor([3.8,4.6,1.6,0.75])
-    steps = torch.tensor([0.2,0.2,0.2,0.25])
-    number_poses = 13984
+    min_pos = torch.tensor([-1.9,-1.,0.,0.])
+    max_pos = torch.tensor([3.1,2.2,2.4,0.91666666])
+    steps = torch.tensor([0.2,0.2,0.2,0.0833333])
+    number_poses = 504900
 
-    objects =  {
-                        "printer": {"dimensions":[3.75,0.17,0.15,0.2,0.15,0.15],"scaling":[1,1,1]},
-                        "bench": {"dimensions":[1.06,2.18,0.23,0.24,0.72,0.23],"scaling":[0.8,0.5,1]},
-                        "big table": {"dimensions":[1.66,2.11,0.4,0.36,0.79,0.4],"scaling":[0.7,0.65,2.4]},
-                        "side table": {"dimensions":[1.86,3.25,0.75,0.48,0.32,0.05],"scaling":[0.7,0.7,2.4]},
-                        "arm chair": {"dimensions":[3.30,4.40,0.5,0.45,0.45,0.5],"scaling":[0.7,0.8,1]},
-                        "chess board table": {"dimensions":[3.56,2.81,0.19,0.19,0.19,0.19],"scaling":[0.8,0.8,1]},
-                        "shelf with the nespresso box": {"dimensions":[3.87,2.82,1.03,0.13,0.36,0.17],"scaling":[1,0.8,1]},
-                        "chair": {"dimensions":[2.10,2.35,0.51,0.3,0.35,0.51],"scaling":[1,1,1]},
-                        "couch": {"dimensions":[1.85,-0.9,0.39,1.37,0.75,0.39],"scaling":[0.5,0.6,1]},
-                        "computer screen": {"dimensions":[1.45,1.59,1.08,0.15,0.25,0.28],"scaling":[0.9,0.8,0.8]},
-                        "box with newspapers": {"dimensions":[1.20,3.25,0.5,0.22,0.22,0.5],"scaling":[0.8,0.8,0.8]}
-                    }
+    objects = {
+                    "drawer": {"dimensions": [4.1,0.29,0.59,0.6,0.29,0.59],"scaling": [1,1,1]},
+                    "couch": {"dimensions": [2.13,2.22,0.5,0.45,1.02,0.5],"scaling": [1,1,1]},
+                    "bed": {"dimensions": [3.58,2.33,0.31,1.0,0.93,0.31],"scaling": [1,1,1]},
+                    "desk": {"dimensions": [3.63,4.43,0.39,0.55,0.25,0.39],"scaling": [1,1,1]},
+                    "lamp": {"dimensions": [4.54,3.64,0.70,0.1,0.1,0.24],"scaling": [1,1,1]},
+                    "bedside table": {"dimensions": [4.52,3.6,0.23,0.2,0.2,0.23],"scaling": [1,1,1]},
+                    "computer screen": {"dimensions": [3.62,4.62,1.09,0.32,0.12,0.31],"scaling": [1,1,1]},
+                    "box": {"dimensions": [0.27,2.38,0.19,0.27,0.48,0.19],"scaling": [1,1,1]}
+                }
 
 
 
@@ -94,14 +93,16 @@ if __name__ == "__main__":
     converter = Converter(min_pos,max_pos,steps,number_poses,objects_no_fly)
 
     create_network(move_actions_dict,always_valid_actions,orientation_to_forward_action,converter)
-    G = nx.read_gpickle(os.path.dirname(os.path.realpath(__file__)) + '/../../graphs/room_books_forward_hollow_table.gpickle')
+    G = nx.read_gpickle(os.path.dirname(os.path.realpath(__file__)) + '/../../graphs/test.gpickle')
 
 
-
-    index_start = converter.pose_to_index(torch.tensor([0.4,2.,0.6,0.]))
-    index_end = converter.pose_to_index(torch.tensor([3.,2.,0.6,0.]))
+    print(converter.index_to_pose(0))
+    print(converter.index_to_pose(23 * 8 * 4 +1))
+    print(converter.index_to_pose(2*23 * 4 * 8))
+    index_start = converter.pose_to_index(torch.tensor([1.2671, 2.6516, 0.6030, 0.7299]))
+    #
+    index_end = converter.pose_to_index(torch.tensor([3.8, 3.8, 1.8, 0.0]))
     print(G.node[index_start])
-    print(G.node[index_end])
 
 
     shortest_path = nx.shortest_path(G,index_start,index_end)

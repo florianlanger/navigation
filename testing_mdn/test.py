@@ -15,6 +15,7 @@ import subprocess
 import socket
 import pickle
 import fasttext
+import select
 
 import sounddevice as sd
 from scipy.io.wavfile import write
@@ -23,17 +24,17 @@ import azure.cognitiveservices.speech as speechsdk
 
 sys.path.append(os.path.abspath("/scratches/robot_2/fml35/mphil_project/navigation/testing"))
 
-# from visualisations import plot_trajectory,plot_action_predictions,visualise_poses,plot_global_probability, plot_combined, plot_trajectory_1
+from visualisations import plot_trajectory,plot_action_predictions,visualise_poses,plot_global_probability, plot_combined, plot_trajectory_1
 
-# sys.path.append(os.path.abspath("/Users/legend98/Google Drive/MPhil project/navigation"))
-# from graph_network.code.graphs.conversions import Converter
-# from action_predictor.code.models.decoder import Decoder_Basic
-# from pose.code.models.model import Pose_Model
-# from target_adjuster.code.models.model import Target_Adjuster
-# from target_pose.target_pose import find_point,filter_text
-# from train_target_predictor.code.data import Target_Predictor_Dataset
-# from train_target_predictor.code.model import LSTM_model
-# from train_target_predictor_mdn.code.model import MixtureDensityNetwork
+sys.path.append(os.path.abspath("/Users/legend98/Google Drive/MPhil project/navigation"))
+from graph_network.code.graphs.conversions import Converter
+from action_predictor.code.models.decoder import Decoder_Basic
+from pose.code.models.model import Pose_Model
+from target_adjuster.code.models.model import Target_Adjuster
+from target_pose.target_pose import find_point,filter_text
+from train_target_predictor.code.data import Target_Predictor_Dataset
+from train_target_predictor.code.model import LSTM_model
+from train_target_predictor_mdn.code.model import MixtureDensityNetwork
 
 
 def sample_position(converter):
@@ -46,6 +47,7 @@ def sample_position(converter):
 
 def load_image(folder_path,name):
     image = Image.open(folder_path +'/images/' + name)
+    #image = Image.open('/Users/legend98/Desktop/render_2043_x_2.318_y_1.633_z_1.283_rz_35.94.png')
     image = F.to_tensor(image)[:3,:,:].unsqueeze(0)#.cuda()
     return image
 
@@ -55,16 +57,18 @@ def find_next_move(predicted_pose,predicted_target_pose,action_predictor,true_po
     _,move_numbers = torch.sort(action_predictions[0],descending=True)
     # Go through moves in order how they were recommended.
     # If move is allowed and has not been done in this pos before, break and do the move
+    #diff_conventions = {0:0,3:1,2:2,4:3,1:4,5:5,6:6,7:7,8:8,9:9}
+
     move = None
     for test_move in move_numbers:
         test_move = test_move.item()
-        test_pose = true_pose.clone() + converter.move_to_coords[test_move]     #.cuda() + converter.move_to_coords[test_move]
+        test_pose = true_pose.clone() + converter.move_to_coords[test_move]
         if converter.validate_pose(converter.map_pose(test_pose)):
             move = test_move
             break
     return move,action_predictions[0]
 
-def perform_test(pose_model,action_predictor,mdn_model,config,converter,test_folder,dir_path,s,objects):
+def perform_test(pose_model,action_predictor,mdn_model,config,converter,test_folder,dir_path,s,objects,scenario,max_number_descriptions):
     
     history_dict = {}
     history_dict['statistics'] = {}
@@ -78,12 +82,15 @@ def perform_test(pose_model,action_predictor,mdn_model,config,converter,test_fol
     history_dict['target_counter'] = 0
     history_dict['terminated'] = False
     history_dict['global_probabilities'] = np.zeros(config["probability_grid"]["points_per_dim"])
+    history_dict['target'] = config[config["room"]]["scenarios_target_positions"][str(scenario)]
 
 
     true_pose = sample_position(converter)
 
+    #x_2.318_y_1.633_z_1.283_rz_35.94
+
     # Repeat until network says terminate or until have reached max_moves
-    while history_dict['counter'] <  config["max_moves"]:
+    while history_dict['counter'] <  max_number_descriptions: #config["max_moves"]:    
         # Find next move
         x,y,z,angle = true_pose.numpy().round(4)[0],true_pose.numpy().round(4)[1],true_pose.numpy().round(4)[2],true_pose.numpy().round(4)[3]
         current_name = 'render_{}_x_{:.4f}_y_{:.4f}_z_{:.4f}_rz_{:.4f}.png'.format(str(history_dict['counter']).zfill(2),x,y,z,angle)
@@ -106,14 +113,15 @@ def perform_test(pose_model,action_predictor,mdn_model,config,converter,test_fol
         history_dict['predicted_poses'][history_dict['counter']] = predicted_pose.cpu().numpy().round(4)
 
         #if history_dict['counter'] == 0 or history_dict['counter'] == 4:
-        if True:
-            contribution_global_probabilities,text,anchor_object = update_target_probabilities_from_speech(test_folder,history_dict['target_counter'],mdn_model,objects,config)
+        #if detected_keystroke == True:
+        if history_dict["target_counter"] < max_number_descriptions:
+            contribution_global_probabilities,text,anchor_object = update_target_probabilities_from_speech(test_folder,history_dict['target_counter'],mdn_model,objects,config,scenario)
             history_dict['global_probabilities'] = history_dict['global_probabilities'] + contribution_global_probabilities
             predicted_target_pose = find_current_target(history_dict["global_probabilities"],config)
             history_dict['predicted_targets'][history_dict['target_counter']] = predicted_target_pose.cpu().numpy().round(4)
             history_dict['last_counter'] = history_dict['counter']
-            plot_global_probability(history_dict['global_probabilities'],test_folder,converter,config,history_dict['target_counter'],'total')
-            plot_global_probability(contribution_global_probabilities,test_folder,converter,config,history_dict['target_counter'],'last',text,anchor_object=anchor_object)
+            plot_global_probability(history_dict['global_probabilities'],test_folder,converter,config,history_dict['target_counter'],'total',scenario)
+            plot_global_probability(contribution_global_probabilities,test_folder,converter,config,history_dict['target_counter'],'last',scenario,text,anchor_object=anchor_object)
             history_dict['target_counter'] += 1
             
         print('Predicted Pose: {} Predicted Target: {}'.format(list(predicted_pose.cpu().numpy().round(3)),list(predicted_target_pose.cpu().numpy().round(3))))
@@ -134,6 +142,7 @@ def perform_test(pose_model,action_predictor,mdn_model,config,converter,test_fol
 
         if move == 9:
             print('Terminate')
+            break
 
         history_dict['counter'] +=1
 
@@ -159,16 +168,13 @@ def voice_command(path,counter):
     return audio_path
 
 
+def update_target_probabilities_from_speech(test_folder,counter,mdn_model,objects,config,scenario,tello=None):
+    #audio_file = voice_command(test_folder,counter)
+    #if tello is not None:
+    #    tello.rotate_clockwise(1)
+    #original_text = transcribe_audio(audio_file)
 
-
-
-def update_target_probabilities_from_speech(test_folder,counter,mdn_model,objects,config,tello=None):
-    audio_file = voice_command(test_folder,counter)
-    if tello is not None:
-        tello.rotate_clockwise(1)
-    original_text = transcribe_audio(audio_file)
-
-    #original_text = config[config["room"]]["scenarios_commands"][str(config['scenario'])][counter]
+    original_text = config[config["room"]]["scenarios_commands"][str(scenario)][counter]
     text,anchor_object = preprocess_text(original_text,objects)
     print(text)
 
@@ -178,11 +184,6 @@ def update_target_probabilities_from_speech(test_folder,counter,mdn_model,object
     return probability_contribution,original_text,anchor_object
 
 def find_probability_contribution_from_parameters(pi,normal,anchor_object,config):
-    # print('pi.shape',pi.shape)
-    # print('normal.shape',normal.shape)
-    print('pi.probs',pi.probs)
-    print('mean',normal.mean)
-    print('std', normal.stddev)
 
     points_per_dim = config["probability_grid"]["points_per_dim"]
     global_probabilities = np.zeros((points_per_dim[0],points_per_dim[1],points_per_dim[2]))
@@ -250,16 +251,12 @@ def transcribe_audio(audio_file):
 
 
 def load_converter(corners_no_fly_zone,config):
-    # min_pos = torch.tensor([-1.3,-0.5,0.2,0.]).cuda()
-    # max_pos = torch.tensor([1.8,1.4,1.7,0.9375]).cuda()
-    min_pos = torch.tensor([0.2,0.2,0.4,0.]) #.cuda()
-    steps = torch.tensor([0.1,0.1,0.1,0.0625]) #.cuda()
-    if config["room"] == 'my_room':
-        max_pos = torch.tensor([4.0,3.4,1.8,0.9375]) #.cuda()
-        number_poses = 272384
-    elif config["room"] == 'room_books':
-        max_pos = torch.tensor([4.0,4.8,1.8,0.9375])
-        number_poses = 391552
+
+    min_pos = torch.tensor([-1.9,-1.,0.,0.])
+    max_pos = torch.tensor([3.1,2.2,2.4,0.91666666])
+    steps = torch.tensor([0.1,0.1,0.1,0.0833333])
+    number_poses = 51 * 33 * 25 * 12
+
     converter = Converter(min_pos,max_pos,steps,number_poses,corners_no_fly_zone)
     return converter
 
@@ -275,21 +272,19 @@ def load_model(dir_path,config):
     pretrained_model = resnet18(pretrained=True)
     pretrained_model.fc = nn.Sequential()
     pose_model = Pose_Model(pretrained_model,512)
-    pose_model.load_state_dict(torch.load(dir_path + '/../drone/networks/pose.pth',map_location=torch.device('cpu')))
+    pose_model.load_state_dict(torch.load(dir_path + '/../drone/networks/pose_networks/' + config["pose_model"],map_location=torch.device('cpu')))
     #pose_model.load_state_dict(torch.load(dir_path + '/../pose/experiments/' + config["pose_model"]))
     pose_model.eval()
 
     action_predictor = Decoder_Basic(10)
-    action_predictor.load_state_dict(torch.load(dir_path + '/../drone/networks/exp_6_small_angles_hard_pairs_time_15_02_48_date_02_06_2020_last_epoch_model.pth',map_location=torch.device('cpu')))
+    action_predictor.load_state_dict(torch.load(dir_path + '/../drone/networks/action_predictor/' + config["action_predictor_model"],map_location=torch.device('cpu')))
     #action_predictor.load_state_dict(torch.load(dir_path + '/../action_predictor/experiments/' + config["action_predictor_model"] + '/checkpoints/last_epoch_model.pth'))
     action_predictor.eval()
 
-   
-    
     ft_model = fasttext.load_model(dir_path + '/cc.en.300.bin')
     #ft_model = None
     mdn_model = MixtureDensityNetwork(300,3,4,ft_model,'normal')
-    mdn_model.load_state_dict(torch.load(dir_path + '/../drone/networks/Fasttext_mdn/exp_06_fixed_bug_better_visuailsation_time_15_56_48_date_29_07_2020_epoch_61.pth',map_location=torch.device('cpu')))
+    mdn_model.load_state_dict(torch.load(dir_path + '/../drone/networks/Fasttext_mdn/' + config["target_predictor_model"],map_location=torch.device('cpu')))
     #mdn_model.eval()
 
     return pose_model,action_predictor,mdn_model
@@ -303,8 +298,6 @@ def main():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT)) 
         print('Connected to server')
-        #s = 'dummy'
-
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
         config = json.load(open(dir_path + '/config.json', 'r'))
@@ -319,28 +312,40 @@ def main():
         
         #load model
         pose_model,action_predictor,mdn_model = load_model(dir_path,config)
+        dt_string = datetime.now().strftime("time_%H_%M_%S_date_%d_%m_%Y")
+        big_test_folder =  "{}/tests/{}".format(dir_path,dt_string)
+        os.mkdir(big_test_folder)
+
+        with open(big_test_folder + '/summary.txt','a') as summary:
+            summary.write('name start_position predicted_target final_position target dist_to_predicted_target\n')
 
         with torch.no_grad():
-            for j in range(config["number_tests"]):
+            for scenario in range(1,7):
+                for max_number_descriptions in range(1,6):
+                    name = "scenario_{}_descriptions_{}".format(str(scenario).zfill(2),max_number_descriptions)
+                    test_folder =  "{}/tests/{}/{}".format(dir_path,dt_string,name)
+                    os.mkdir(test_folder)
+                    os.mkdir(test_folder + '/images')
+                    os.mkdir(test_folder + '/recordings')
+                    os.mkdir(test_folder + '/action_predictions')
+                    os.mkdir(test_folder + '/poses')
+                    os.mkdir(test_folder + '/trajectories')
+                    os.mkdir(test_folder + '/probabilities')
+                    os.mkdir(test_folder + '/combined')
 
-                dt_string = datetime.now().strftime("time_%H_%M_%S_date_%d_%m_%Y")
-                test_folder =  "{}/tests/{}_{}".format(dir_path,config["name"],dt_string)
-                os.mkdir(test_folder)
-                os.mkdir(test_folder + '/images')
-                os.mkdir(test_folder + '/recordings')
-                os.mkdir(test_folder + '/action_predictions')
-                os.mkdir(test_folder + '/poses')
-                os.mkdir(test_folder + '/trajectories')
-                os.mkdir(test_folder + '/probabilities')
-                os.mkdir(test_folder + '/combined')
+                    history_dict = perform_test(pose_model,action_predictor,mdn_model,config,converter,test_folder,dir_path,s,objects,scenario,max_number_descriptions)
 
-                history_dict = perform_test(pose_model,action_predictor,mdn_model,config,converter,test_folder,dir_path,s,objects)
+                    dict_file = test_folder + '/history_dict'
+                    f = open(dict_file + '.txt','a')
+                    f.write(str(history_dict))
+                    f.close()
+                    np.save(dict_file+'.npy', history_dict)
 
-                dict_file = test_folder + '/history_dict'
-                f = open(dict_file + '.txt','a')
-                f.write(str(history_dict))
-                f.close()
-                np.save(dict_file+'.npy', history_dict)
+                    with open(big_test_folder + '/summary.txt','a') as summary:
+                        dist_to_predicted_target = np.linalg.norm(np.array(history_dict['predicted_targets'][history_dict['target_counter']-1]) - history_dict['target']).round(4)
+                        print(dist_to_predicted_target)
+                        summary.write('{}#{}#{}#{}#{}#{}\n'.format(name,history_dict['true_poses'][0],history_dict['predicted_targets'][history_dict['target_counter']-1],history_dict['true_poses'][history_dict['counter']-1],history_dict['target'],dist_to_predicted_target))
+
 
 if __name__ == "__main__":
     main()
