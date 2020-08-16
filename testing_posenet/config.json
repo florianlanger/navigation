@@ -1,8 +1,5 @@
 {
-    "name": "scenario_04",
-    "action_predictor_model":"exp_6_small_angles_hard_pairs_time_15_02_48_date_02_06_2020",
-    "pose_model":"exp_4_augmentation_time_19_16_49_date_01_06_2020/checkpoints/epoch_2201_model.pth",
-    "target_adjuster_model":"exp_4_diff_vector_time_08_50_18_date_08_06_2020",
+    "name": "seq_2",
     "use_guidance":"True",
     "frequency_guidance": 50,
     "gpu": "6",
@@ -18,9 +15,27 @@
             "points_per_dim": [20,20,10]
         },
 
-    "room": "room_books", 
+    "room": "new_room", 
 
-
+    "new_room":
+        {   
+            "dimensions":
+                {
+                    "min": [0.0,0.0,0.0],
+                    "max": [4.74,4.68,1.80]
+                },
+            "objects":
+                {
+                    "drawer": {"dimensions": [4.1,0.29,0.59,0.6,0.29,0.59],"scaling": [1,1,1]},
+                    "couch": {"dimensions": [2.13,2.22,0.5,0.45,1.02,0.5],"scaling": [1,1,1]},
+                    "bed": {"dimensions": [3.58,2.33,0.31,1.0,0.93,0.31],"scaling": [1,1,1]},
+                    "desk": {"dimensions": [3.63,4.43,0.39,0.55,0.25,0.39],"scaling": [1,1,1]},
+                    "lamp": {"dimensions": [4.54,3.64,0.70,0.1,0.1,0.24],"scaling": [1,1,1]},
+                    "bedside table": {"dimensions": [4.52,3.6,0.23,0.2,0.2,0.23],"scaling": [1,1,1]},
+                    "computer screen": {"dimensions": [3.62,4.62,1.09,0.32,0.12,0.31],"scaling": [1,1,1]},
+                    "box": {"dimensions": [0.27,2.38,0.19,0.27,0.48,0.19],"scaling": [1,1,1]}
+                }
+        },
     "my_room":
         {   
             "dimensions":

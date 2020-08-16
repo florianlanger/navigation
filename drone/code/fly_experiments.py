@@ -7,14 +7,13 @@ import json
 import time
 import shutil
 
-sys.path.append(os.path.abspath("/Users/legend98/Google Drive/MPhil project/navigation/drone"))
 
 from tellopy.modified_tellopy import Tello
 
 def make_directories(exp_path):
     os.mkdir(exp_path)
     os.mkdir(exp_path + '/images')
-    shutil.copytree(exp_path +'/../../code',exp_path +'/code')
+    shutil.copytree(exp_path +'/../../../code',exp_path +'/code')
 
 
 def execute_command(tello,tuple_command):
@@ -36,30 +35,30 @@ def execute_command(tello,tuple_command):
         tello.rotate_counter_clockwise(tuple_command[1])
 
 
-def save_image(exp_path,start_time,current_time,tello):
+def save_image(image_name,tello):
     img = tello.get_frame_read().frame
-    image_name = 'image_{}.png'.format(str(current_time - start_time).zfill(6))
-    cv2.imwrite(exp_path + '/images/' + image_name,img)
+    cv2.imwrite(image_name,img)
 
 def main():
 
-    name = 'test_fov'
+    name = 'callback_right'
     # Bookkeeping 
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    exp_path = '{}/../experiments/{}_{}'.format(dir_path, name,datetime.now().strftime("time_%H_%M_%S_date_%d_%m_%Y"))
+    exp_path = '{}/../experiments/fly_sequences/{}_{}'.format(dir_path, name,datetime.now().strftime("time_%H_%M_%S_date_%d_%m_%Y"))
     make_directories(exp_path)
 
-    list_of_commands = [
-    ['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],
-    ['cw',90],['cw',90],
-    ['forward',20],['forward',20],['forward',20],['forward',20],['forward',20]
+    list_of_commands = [['up',20],['up',20],['up',20],['up',20],
+    ['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],
+    ['cw',90],
+    ['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],
+    ['cw',90],
+    ['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],['forward',20],
     ]
 
-    delay = 0
+    delay = 2000
 
-    with open(exp_path + '/list_commands.txt','w') as text_file:
-        text_file.write(str(list_of_commands) + '\n delay time (ms) ' + str(delay))
 
+    image_names = []
     tello = Tello()
     tello.connect()
     tello.streamon()
@@ -69,19 +68,24 @@ def main():
     start_time = int(round(time.time() * 1000))
     last_action_time = int(round(time.time() * 1000))
     action_counter = 0
-    # while action_counter < len(list_of_commands):
-    #     current_time = int(round(time.time() * 1000))
+    while action_counter < len(list_of_commands):
+        current_time = int(round(time.time() * 1000))
         
-        # if current_time - last_action_time > delay:
-        #     execute_command(tello,list_of_commands[action_counter])
-        #     action_counter += 1
-        #     last_action_time = int(round(time.time() * 1000))
+        if current_time - last_action_time > delay:
+            #execute_command(tello,list_of_commands[action_counter])
+            action_counter += 1
+            last_action_time = int(round(time.time() * 1000))
+            print(action_counter)
 
-    save_image(exp_path,start_time,last_action_time,tello)#current_time,tello)
+            image_name = 'image_{}.png'.format(str(action_counter).zfill(6))
+            save_image(exp_path + '/images/'+image_name,tello)
+        # image_names.append(image_name)
+        # with open(exp_path + '/image_names.txt','w') as text_file:
+        #     text_file.write(str(image_names))
     
 
     # tello.land()
-    tello.end()
+    # tello.end()
 
 
 
