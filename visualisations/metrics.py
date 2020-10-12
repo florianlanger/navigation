@@ -23,8 +23,8 @@ from ablation_loss_visualisations import visualise
 
 data = np.load('data.npz')
 
-# for i in range(3):
-#     visualise(data["val_predictions"][i][:6],data["val_targets"][:6],'model_'+str(i))
+for i in range(3):
+    visualise(data["val_predictions"][i][1:2],data["val_targets"][1:2],'visualisations/model_'+str(i))
 
 
 #Three things distance from max prediction, relative probabilitiy at target, at RC curve
@@ -137,7 +137,30 @@ target_indices = np.load('target_indices.npz')
 #     print('train: ',relative_probability(data["train_predictions"],target_indices["train"]))
 #     print('val: ',relative_probability(data["val_predictions"],target_indices["val"]))
 
-for i in range(3):
-    print('train: ',average_dist_of_max_prediction(data["train_predictions"][i],target_indices["train"]))
-    print('val: ',average_dist_of_max_prediction(data["val_predictions"][i],target_indices["val"]))
-    print('----')
+# for i in range(3):
+#     print('train: ',average_dist_of_max_prediction(data["train_predictions"][i],target_indices["train"]))
+#     print('val: ',average_dist_of_max_prediction(data["val_predictions"][i],target_indices["val"]))
+#     print('----')
+
+
+
+#     data = np.load('data.npz')
+
+#      for i in range(3):
+#         visualise(data["val_predictions"][i],data["val_targets"],'model_'+str(i))
+
+#     distances = np.empty((2,int((stop-start)/steps)))
+
+
+#         sorted_predictions = np.argsort(data["val_predictions"][i],axis=1)
+#         for j,threshold in enumerate(range(start,stop,steps)):
+#             min_distances = calc_min_dist_threshold(sorted_predictions,data["val_targets"][i],threshold)
+#             distances[h,j] = np.mean(min_distances)
+
+
+#     np.savez('data_architectures/roc_curve_architecture_{}.npz'.format(str(i).zfill(2)),distances=distances)
+
+# data = np.load('roc_curve_distances.npz')
+# for k in data.files:
+#     print(k)
+# print(data["distances"].shape)

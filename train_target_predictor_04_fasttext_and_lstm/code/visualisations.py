@@ -74,7 +74,7 @@ def visualise(output,target,description,path,config,pi,normal):
         ax3,_ = one_view_probabilities(ax3,output[i],target[i])
         ax3.view_init(elev=90, azim=180)
     
-        fig.savefig(path + '_example_{}.png'.format(i),dpi=150)
+        fig.savefig(path + '_example_{}.png'.format(i),dpi=200)
         plt.close(fig)
 
 

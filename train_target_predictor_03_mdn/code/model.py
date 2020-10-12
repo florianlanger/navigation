@@ -28,7 +28,7 @@ class MixtureDensityNetwork(nn.Module):
             embeddings = torch.zeros(len(x),300)
             for i in range(len(x)):
                 embeddings[i] = torch.from_numpy(self.ft_model.get_sentence_vector(x[i]))
-        return self.pi_network(embeddings.cuda()), self.normal_network(embeddings.cuda())
+        return self.pi_network(embeddings), self.normal_network(embeddings)
 
     def loss(self, x, y):
         pi, normal = self.forward(x)

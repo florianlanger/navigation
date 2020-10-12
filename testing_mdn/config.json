@@ -1,16 +1,16 @@
 {
-    "name": "debug",
-    "action_predictor_model":"exp_11_wide_grid_correct_perturb_time_13_07_26_date_14_08_2020_epoch_61_model.pth",
+    "name": "find_probabilities",
+    "action_predictor_model":"exp_11_wide_grid_correct_perturb_time_13_07_26_date_14_08_2020_epoch_141_model.pth",
     "pose_model":"ignas_big_exp_01_time_09_43_38_date_13_08_2020_epoch_261_model.pth",
     "target_predictor_model":"exp_06_fixed_bug_better_visuailsation_time_15_56_48_date_29_07_2020_epoch_61.pth",
-    "max_moves": 5,
+    "max_moves": 200,
     "scenario": 1,
     "probability_grid":
         {
             "step_sizes": [0.2,0.2,0.2],
-            "min_position": [0.0,0.0,0.0],
-            "max_position": [4.0,4.0,2.0],
-            "points_per_dim": [20,20,10]
+            "min_position": [-1.9,-1.0,0.2],
+            "max_position": [3.1,2.2,2.0],
+            "points_per_dim": [25,16,9]
         },
 
     "room": "ignas_living_room", 
@@ -44,9 +44,9 @@
                     "1": ["in front of the big table slightly to the right on central height","in the center behind the sofa","in front of the right side of the big table","slightly right from the big table big and in front","at the center of the back side of the sofa"],
                     "2": ["on the leftside of the sofa","in front of the big table and to the left of it","behind the radiator on the right side","behind the left side of the arm chair","to the left of the sofa"],
                     "3": ["to the right of the arm chair","in front of the right side of the sideboard","to the right of the arm chair on the same height as the top","underneath the lamp slightly to the right","above the couch table"],
-                    "4": ["behind the bookshelf slightly below","behind the desk chair on the right side on the same height as the top","behind the sideboard in the middle","to the left of the couch table and above it","underneath the lamp to the left"],
+                    "4": ["behind the bookshelf slightly below on the leftside","behind the desk chair on the right side and above it","behind the sideboard higher up","to the left of the couch table and above it","underneath the lamp to the left"],
                     "5": ["to the left of the big table on the same height as the top","slighly behind the sofa on the left side","on the left side of the sofa in the back","on the right side of the sink","to the right of the sink"],
-                    "6": [ "underneath the lamp and further back and to the right","behind the right side of the sideboard","in front of the sofa","behind the couch higher than the top","to the right of the arm chair on central height"]
+                    "6": [ "underneath the lamp and further back and to the right","behind the right side of the sideboard","in front of the sofa on the same height as the top","behind the couch table higher than the top","to the right of the arm chair on the same height as the top above"]
                 },
 
             "scenarios_target_positions":
@@ -57,6 +57,16 @@
                     "4": [-0.7,1.2,1.3,0.0],
                     "5": [2.3,2.0,1.2,0.0],
                     "6": [0.0,0.0,1.0,0.0]
+
+                },
+                "scenarios_start_positions":
+                {
+                    "1": [2.0,2.0,0.75,0.0],
+                    "2": [-1.0,-0.8,0.5,0.0],
+                    "3": [2.0,2.0,1.0,0.5],
+                    "4": [2.0,-0.5,1.3,0.0],
+                    "5": [2.0,2.0,0.5,0.0],
+                    "6": [2.0,2.0,1.0,0.0]
 
                 }
 

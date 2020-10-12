@@ -35,7 +35,9 @@ class MixtureDensityNetwork(nn.Module):
                 for j in range(len(split_descriptions)):
                     embeddings[i,j] = torch.from_numpy(self.ft_model.get_word_vector(split_descriptions[j]))
 
-        packed_input = pack_padded_sequence(embeddings.cuda(), length_descriptions, batch_first=True,enforce_sorted=False)
+        print(length_descriptions)
+        print(descriptions)
+        packed_input = pack_padded_sequence(embeddings, length_descriptions, batch_first=True,enforce_sorted=False)
 
         packed_output, (ht, ct) = self.lstm(packed_input)
 
@@ -72,6 +74,8 @@ class MixtureDiagNormalNetwork(nn.Module):
 
     def forward(self, x):
         params = self.network(x)
+        print(params.shape)
+        params = params.unsqueeze(1)
         mean, sd = torch.split(params, params.shape[1] // 2, dim=1)
         mean = torch.stack(mean.split(mean.shape[1] // self.n_components, 1))
         sd = torch.stack(sd.split(sd.shape[1] // self.n_components, 1))

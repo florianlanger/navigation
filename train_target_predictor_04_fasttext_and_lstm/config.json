@@ -1,10 +1,10 @@
 {
-    "experiment_name": "exp_01",
+    "experiment_name": "debug",
     "gpu": "0",
-    "mode": "normal",
+    "mode": "debug",
     "training": 
         {
-            "n_epochs": 1000,
+            "n_epochs": 1,
             "learning_rate": 0.005,
             "save_interval": 20,
             "batch_size": 5

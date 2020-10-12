@@ -28,16 +28,9 @@ def add_edges(G, move_actions_dict, total_number_non_terminate_nodes,always_vali
             G.nodes[i]['flyable'] = True
             G.nodes[i + total_number_non_terminate_nodes]['flyable'] = True
             forward_action = []
-<<<<<<< HEAD
             degree_after_mod = (pose[3] / 0.25) % 1.
             if  (-0.001 < degree_after_mod  and degree_after_mod < 0.001) or (0.999 < degree_after_mod  and degree_after_mod < 1.001):
                 forward_action.append(orientation_to_forward_action[int((pose[3]*4).round())])
-=======
-            print(pose)
-            print((pose[3] / 0.25) % 1.)
-            if (pose[3] / 0.25) % 1. < 0.0001:
-                forward_action.append(orientation_to_forward_action[int(pose[3]*4)])
->>>>>>> ae5b853f2db5bb6fcde5105cc3e992d97dd292f0
             for test_action in always_valid_actions + forward_action:
                 adj_pos = pose + move_actions_dict[test_action]['change']
                 adj_pos[3] = adj_pos[3] % 1.
@@ -54,15 +47,9 @@ def add_edges(G, move_actions_dict, total_number_non_terminate_nodes,always_vali
 
 def create_network(move_actions_dict,always_valid_actions,orientation_to_forward_action,converter):
     G = nx.MultiDiGraph()
-<<<<<<< HEAD
     add_nodes(G,51 * 33 * 25 * 12,converter)
     add_edges(G,move_actions_dict,51 * 33 * 25 * 12,always_valid_actions,orientation_to_forward_action,converter)
     nx.write_gpickle(G,os.path.dirname(os.path.realpath(__file__)) + '/../../graphs/ignas_big_room_fine_grid.gpickle') 
-=======
-    add_nodes(G, 8 * 4,converter)
-    add_edges(G,move_actions_dict,8 * 4,always_valid_actions,orientation_to_forward_action,converter)
-    nx.write_gpickle(G,os.path.dirname(os.path.realpath(__file__)) + '/../../graphs/test.gpickle') 
->>>>>>> ae5b853f2db5bb6fcde5105cc3e992d97dd292f0
 
 
 if __name__ == "__main__":
@@ -109,8 +96,8 @@ if __name__ == "__main__":
 
     converter = Converter(min_pos,max_pos,steps,number_poses,objects_no_fly)
 
-    create_network(move_actions_dict,always_valid_actions,orientation_to_forward_action,converter)
-    G = nx.read_gpickle(os.path.dirname(os.path.realpath(__file__)) + '/../../graphs/ignas_big_room_fine_grid.gpickle')
+    #create_network(move_actions_dict,always_valid_actions,orientation_to_forward_action,converter)
+    G = nx.read_gpickle(os.path.dirname(os.path.realpath(__file__)) + '/../../graphs/ignas_big_room_wide_grid.gpickle')
 
 
 
@@ -125,32 +112,10 @@ if __name__ == "__main__":
     # for i in range(len(shortest_path)-1):
     #     print(G[shortest_path[i]][shortest_path[i+1]][0]['action'])
 
-    print(G.nodes[19839])
-
-    iterator = G.predecessors(22491)
 
 
-    print('Should not have predecessor')
-    print(next(iterator))
-    print('---------')
- 
-
-    print(G.edges([19839]))
-    index_start = 19839
-    index_start_2 = 22491
-    index_end = 92341
-
-    print(G[index_start])
-    for adj_node in (G[index_start]):
-        print(adj_node)
-
-    print(G.nodes[index_start])
-    print(G.nodes[index_start_2])
-    print(G.nodes[index_end])
-    print(G.nodes[19839]["flyable"])
-
-
-    shortest_path = nx.shortest_path(G,index_start,index_end)
+    shortest_path = nx.shortest_path(G,100,100)
+    print(shortest_path)
 
     for i in range(len(shortest_path)-1):
         print(G[shortest_path[i]][shortest_path[i+1]][0]['action'])

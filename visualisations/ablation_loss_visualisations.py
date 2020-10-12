@@ -36,8 +36,8 @@ def one_view_probabilities(ax,output,target):
     #         #position = cube[:3] + (indices - 4) * cube[3:6]/2 + np.array([0.05,0.05,0.05])
     #         position = np.array([0.,0.,0.]) + (indices - 4) *  np.array([1.,1.,1.]) /2 + np.array([0.05,0.05,0.05])
     
-    position = target + 0.15
-    ax.scatter(position[0],position[1],position[2],color='red')    
+    position = target + 0.1
+    ax.scatter(position[0],position[1],position[2]-0.5,color='red')    
 
     ax.set_xlabel('x')
     ax.set_ylabel('y')
@@ -54,15 +54,23 @@ def one_view_probabilities(ax,output,target):
     
 def visualise(output,target,path):
     for i in range(output.shape[0]):
-        fig = plt.figure(figsize=plt.figaspect(2.))
-        ax1 = fig.add_subplot(2,1,1, projection='3d')
-        ax1,p = one_view_probabilities(ax1,output[i],target[i])
-        fig.colorbar(p, ax=ax1)
-        ax1.view_init(elev=0, azim=180)
+        fig = plt.figure(figsize=plt.figaspect(3.))
+        ax1 = fig.add_subplot(3,1,1, projection='3d')
+        ax1,_ = one_view_probabilities(ax1,output[i],target[i])
+        ax1.view_init(elev=40, azim=200)
 
-        ax2 = fig.add_subplot(2,1,2, projection='3d')
+        ax2 = fig.add_subplot(3,1,2, projection='3d')
         ax2,_ = one_view_probabilities(ax2,output[i],target[i])
-        ax2.view_init(elev=90, azim=180)
+        ax2.view_init(elev=0, azim=180)
+        ax2.set_xlabel('')
+        ax2.set_xticks([])
+
+        ax3 = fig.add_subplot(3,1,3, projection='3d')
+        ax3,p = one_view_probabilities(ax3,output[i],target[i])
+        ax3.view_init(elev=90, azim=180)
+        ax3.set_zlabel('')
+        ax3.set_zticks([])
+        fig.colorbar(p, ax=ax3)
     
         fig.savefig(path + '_example_{}.png'.format(i),dpi=150,bbox_inches = "tight")
         plt.close(fig)
